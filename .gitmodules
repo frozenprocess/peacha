@@ -1,0 +1,5 @@
+[submodule "backend/calico"]
+	path = backend/calico
+	url = git@github.com:projectcalico/calico.git
+	branch = release-v3.30
+    ignore = all
