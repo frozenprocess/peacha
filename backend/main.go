@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/projectcalico/calico/felix/calc"
 	"github.com/projectcalico/calico/felix/config"
@@ -24,22 +25,72 @@ func main() {
 
 func Init() {
 	conf := config.New()
+	// Don't need this
+	conf.UsageReportingEnabled = false
 	conf.FelixHostname = "localhost"
 	es := calc.NewEventSequencer(conf)
-	cg := calc.NewCalculationGraph(es, nil, conf, func() {})
+	lookupsCache := calc.NewLookupsCache()
+	cg := calc.NewCalculationGraph(es, lookupsCache, conf, func() {
+		fmt.Println("Calculation graph updated")
+	})
 	epUpdates := makeEndpointUpdates(2, "localhost")
 	sendEndpointUpdates(cg, epUpdates)
 	TiUpdates := makeTierUpdates(1, "default")
 	sendEndpointUpdates(cg, TiUpdates)
-
+	polUpdates := makeTagPolicies(10)
+	sendEndpointUpdates(cg, polUpdates)
 	// rulescanner to match labels
 	// if that is successfull then policy matcher should be called
+	// We can not read the cg directly so we use the cache
+	// here I flag the cg to be in sync which will trigger an offload to cache
+	cg.AllUpdDispatcher.OnDatamodelStatus(api.InSync)
+	// no idea what we are flushing but it seems to be important
+	cg.Flush()
+	// Now I can see dead people!
+	// selEp := &model.WorkloadEndpointKey{Hostname: "localhost", OrchestratorID: "k8s", WorkloadID: "wep-0", EndpointID: "eth0"}
+	ed := lookupsCache.GetAllEndpointData()
+	// ed := lookupsCache.GetEndpoint()
+	for _, i := range ed {
+		fmt.Println(i.EgressMatchData().PolicyMatches)
+	}
+	// rs := calc.NewRuleScanner()
+	// rs.OnPolicyActive()
+	time.Sleep(10 * time.Second)
 
+	fmt.Println(ed)
 	fmt.Println(cg)
 }
 
 func sendEndpointUpdates(cg *calc.CalcGraph, epUpdates []api.Update) {
 	cg.AllUpdDispatcher.OnUpdates(epUpdates)
+}
+
+var nextTagPolID int
+
+func makeTagPolicies(num int) []api.Update {
+	const rulesPerPol = 5
+	updates := make([]api.Update, 0, num)
+	for i := 0; i < num; i++ {
+		pol := &model.Policy{Namespace: "default"}
+		pol.Selector = fmt.Sprintf("has(%s)", markerLabels[i%len(markerLabels)])
+		pol.Selector = "all()"
+		for j := 0; j < rulesPerPol; j++ {
+			pol.InboundRules = append(pol.InboundRules, model.Rule{
+				Action:      "Deny",
+				SrcSelector: fmt.Sprintf("has(%s)", markerLabels[(nextTagPolID+j)%len(markerLabels)]),
+			})
+		}
+
+		updates = append(updates, api.Update{
+			KVPair: model.KVPair{
+				Key:   model.PolicyKey{Name: fmt.Sprintf("default/default.tag-pol-%d", nextTagPolID), Tier: "default"},
+				Value: pol,
+			},
+		})
+
+		nextTagPolID++
+	}
+	return updates
 }
 
 func makeTierUpdates(num int, name string) []api.Update {
@@ -69,7 +120,7 @@ func makeEndpointUpdates(num int, host string) []api.Update {
 		key := model.WorkloadEndpointKey{
 			Hostname:       host,
 			OrchestratorID: "k8s",
-			WorkloadID:     fmt.Sprintf("wep-%d", n),
+			WorkloadID:     fmt.Sprintf("cali-%d", n),
 			EndpointID:     "eth0",
 		}
 		ipNet := getNextIP()
@@ -77,6 +128,7 @@ func makeEndpointUpdates(num int, host string) []api.Update {
 			KVPair: model.KVPair{
 				Key: key,
 				Value: &model.WorkloadEndpoint{
+					State:      "active",
 					Labels:     generateLabels(),
 					IPv4Nets:   []calinet.IPNet{ipNet},
 					ProfileIDs: []string{fmt.Sprintf(conversion.NamespaceProfileNamePrefix+"namespace-%d", n%numNamespaces)},
