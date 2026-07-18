@@ -1,0 +1,201 @@
+# Fixed workload topology that policies are tested against.
+#
+# Two namespaces (prod, dev), each with a 3-tier app: frontend -> backend ->
+# database. Every pod runs `agnhost netexec` as a TCP/HTTP server on :8080
+# plus a UDP echo server on :8081 (Tier B from UDP-PROBES.md - UDP `allow`
+# vs `deny` is indistinguishable without a destination that echoes), and
+# can act as a client (`agnhost connect`) when the harness exec's into it.
+# Labels are chosen so policies can select by app, tier, or namespace
+# (podSelector / namespaceSelector / both).
+#
+# Pods are addressed by the harness as "<namespace>/<app>".
+#
+# nodeName places each pod on a real cluster node (see workloads/*-snapshot.json
+# nodes[]): the web tier on the control-plane, the app + data tiers on the
+# worker. This makes the editor's node-grouped graph view meaningful - pods land
+# in their node's box (not an "unscheduled" bucket) and frontend->backend reads
+# as a cross-node flow that transits the host firewall.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+  labels:
+    env: prod
+    purpose: policy-eval
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+  labels:
+    env: dev
+    purpose: policy-eval
+# ---------------------------------------------------------------------------
+# prod
+# ---------------------------------------------------------------------------
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: prod
+  labels: { app: frontend, tier: web, env: prod }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: frontend, env: prod } }
+  template:
+    metadata:
+      labels: { app: frontend, tier: web, env: prod }
+    spec:
+      nodeName: policy-llm-control-plane
+      # nodeName bypasses the scheduler, but tolerate the control-plane taint
+      # explicitly so this also schedules cleanly when applied to a real cluster.
+      tolerations:
+        - { key: node-role.kubernetes.io/control-plane, operator: Exists, effect: NoSchedule }
+      containers:
+        - name: app
+          image: registry.k8s.io/e2e-test-images/agnhost:2.52
+          command: ["/agnhost", "netexec", "--http-port=8080", "--udp-port=8081"]
+          ports:
+          - { containerPort: 8080, name: http }
+          - { containerPort: 8081, name: udp-echo, protocol: UDP }
+          readinessProbe: { httpGet: { path: /, port: 8080 }, periodSeconds: 2 }
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { memory: 64Mi }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: prod
+  labels: { app: backend, tier: app, env: prod }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: backend, env: prod } }
+  template:
+    metadata:
+      labels: { app: backend, tier: app, env: prod }
+    spec:
+      nodeName: policy-llm-worker
+      containers:
+        - name: app
+          image: registry.k8s.io/e2e-test-images/agnhost:2.52
+          command: ["/agnhost", "netexec", "--http-port=8080", "--udp-port=8081"]
+          ports:
+          - { containerPort: 8080, name: http }
+          - { containerPort: 8081, name: udp-echo, protocol: UDP }
+          readinessProbe: { httpGet: { path: /, port: 8080 }, periodSeconds: 2 }
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { memory: 64Mi }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database
+  namespace: prod
+  labels: { app: database, tier: data, env: prod }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: database, env: prod } }
+  template:
+    metadata:
+      labels: { app: database, tier: data, env: prod }
+    spec:
+      nodeName: policy-llm-worker
+      containers:
+        - name: app
+          image: registry.k8s.io/e2e-test-images/agnhost:2.52
+          command: ["/agnhost", "netexec", "--http-port=8080", "--udp-port=8081"]
+          ports:
+          - { containerPort: 8080, name: http }
+          - { containerPort: 8081, name: udp-echo, protocol: UDP }
+          readinessProbe: { httpGet: { path: /, port: 8080 }, periodSeconds: 2 }
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { memory: 64Mi }
+# ---------------------------------------------------------------------------
+# dev
+# ---------------------------------------------------------------------------
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: dev
+  labels: { app: frontend, tier: web, env: dev }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: frontend, env: dev } }
+  template:
+    metadata:
+      labels: { app: frontend, tier: web, env: dev }
+    spec:
+      nodeName: policy-llm-control-plane
+      tolerations:
+        - { key: node-role.kubernetes.io/control-plane, operator: Exists, effect: NoSchedule }
+      containers:
+        - name: app
+          image: registry.k8s.io/e2e-test-images/agnhost:2.52
+          command: ["/agnhost", "netexec", "--http-port=8080", "--udp-port=8081"]
+          ports:
+          - { containerPort: 8080, name: http }
+          - { containerPort: 8081, name: udp-echo, protocol: UDP }
+          readinessProbe: { httpGet: { path: /, port: 8080 }, periodSeconds: 2 }
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { memory: 64Mi }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: dev
+  labels: { app: backend, tier: app, env: dev }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: backend, env: dev } }
+  template:
+    metadata:
+      labels: { app: backend, tier: app, env: dev }
+    spec:
+      nodeName: policy-llm-worker
+      containers:
+        - name: app
+          image: registry.k8s.io/e2e-test-images/agnhost:2.52
+          command: ["/agnhost", "netexec", "--http-port=8080", "--udp-port=8081"]
+          ports:
+          - { containerPort: 8080, name: http }
+          - { containerPort: 8081, name: udp-echo, protocol: UDP }
+          readinessProbe: { httpGet: { path: /, port: 8080 }, periodSeconds: 2 }
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { memory: 64Mi }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database
+  namespace: dev
+  labels: { app: database, tier: data, env: dev }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: database, env: dev } }
+  template:
+    metadata:
+      labels: { app: database, tier: data, env: dev }
+    spec:
+      nodeName: policy-llm-worker
+      containers:
+        - name: app
+          image: registry.k8s.io/e2e-test-images/agnhost:2.52
+          command: ["/agnhost", "netexec", "--http-port=8080", "--udp-port=8081"]
+          ports:
+          - { containerPort: 8080, name: http }
+          - { containerPort: 8081, name: udp-echo, protocol: UDP }
+          readinessProbe: { httpGet: { path: /, port: 8080 }, periodSeconds: 2 }
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { memory: 64Mi }

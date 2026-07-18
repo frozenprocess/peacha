@@ -1,0 +1,45 @@
+# Lesson 85 - rolling out a Deny without causing an outage.
+#
+# The scariest change in network policy is the first Deny in production: one
+# wrong selector and you cause the very outage you were trying to prevent. A
+# STAGED policy is the safety net. It is byte-for-byte the policy you intend to
+# ship (same selector, same rules), but the dataplane treats every verdict as
+# observe-only - it never drops a packet and never allows one. So adding a staged
+# policy changes the connectivity matrix by EXACTLY NOTHING; you read its would-be
+# effect from flow logs, then promote it by deleting the `Staged` prefix.
+#
+# Two objects:
+#   1. An ENFORCED GlobalNetworkPolicy (live): prod/database accepts ingress only
+#      from prod/backend. Real, working policy - leave it.
+#   2. A StagedGlobalNetworkPolicy: the next tightening step - default-deny the
+#      backend's ingress (types:[Ingress], no rules). Because it's staged, the
+#      web->app path from earlier lessons would STILL work; the lockdown is only
+#      previewed. Promote it later by changing the kind to GlobalNetworkPolicy.
+#
+# The "avoid lockout" safe-mode habit (an explicit allow-all at a high order,
+# applied BEFORE your denials, then removed last) is shown in the lesson body.
+---
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: database-allow-from-backend
+spec:
+  selector: env == 'prod' && app == 'database'
+  types:
+    - Ingress
+  ingress:
+    - action: Allow
+      protocol: TCP
+      source:
+        selector: env == 'prod' && app == 'backend'
+      destination:
+        ports: [8080]
+---
+apiVersion: projectcalico.org/v3
+kind: StagedGlobalNetworkPolicy
+metadata:
+  name: backend-lockdown-staged
+spec:
+  selector: env == 'prod' && app == 'backend'
+  types:
+    - Ingress

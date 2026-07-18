@@ -1,0 +1,206 @@
+{
+  "_meta": {
+    "plugin": "calico",
+    "context": "<current>",
+    "generated_at": "2026-06-01T12:44:41Z",
+    "regenerate_with": "python3 snapshot-cni.py --plugin calico > workloads/calico-snapshot.json"
+  },
+  "namespaces": [
+    {
+      "name": "calico-system",
+      "labels": {
+        "app.kubernetes.io/component": "Installation.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "calico-system",
+        "app.kubernetes.io/part-of": "Calico",
+        "k8s-app": "calico-system",
+        "kubernetes.io/metadata.name": "calico-system",
+        "name": "calico-system",
+        "pod-security.kubernetes.io/enforce": "privileged",
+        "pod-security.kubernetes.io/enforce-version": "latest"
+      }
+    },
+    {
+      "name": "tigera-operator",
+      "labels": {
+        "kubernetes.io/metadata.name": "tigera-operator",
+        "name": "tigera-operator",
+        "pod-security.kubernetes.io/enforce": "privileged"
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "name": "k3d-calico-demo-agent-0",
+      "ip": "172.20.0.3",
+      "interfaceName": "eth0",
+      "labels": {
+        "beta.kubernetes.io/arch": "amd64",
+        "beta.kubernetes.io/instance-type": "k3s",
+        "beta.kubernetes.io/os": "linux",
+        "kubernetes.io/arch": "amd64",
+        "kubernetes.io/hostname": "k3d-calico-demo-agent-0",
+        "kubernetes.io/os": "linux",
+        "node.kubernetes.io/instance-type": "k3s"
+      }
+    },
+    {
+      "name": "k3d-calico-demo-server-0",
+      "ip": "172.20.0.2",
+      "interfaceName": "eth0",
+      "labels": {
+        "beta.kubernetes.io/arch": "amd64",
+        "beta.kubernetes.io/instance-type": "k3s",
+        "beta.kubernetes.io/os": "linux",
+        "kubernetes.io/arch": "amd64",
+        "kubernetes.io/hostname": "k3d-calico-demo-server-0",
+        "kubernetes.io/os": "linux",
+        "node-role.kubernetes.io/control-plane": "true",
+        "node-role.kubernetes.io/master": "true",
+        "node.kubernetes.io/instance-type": "k3s"
+      }
+    }
+  ],
+  "endpoints": [
+    {
+      "id": "calico-system/calico-apiserver",
+      "namespace": "calico-system",
+      "app": "calico-apiserver",
+      "pod": "calico-apiserver-7cbf779f8f-2tqq9",
+      "ip": "192.168.121.135",
+      "labels": {
+        "apiserver": "true",
+        "app.kubernetes.io/component": "APIServer.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "calico-apiserver",
+        "app.kubernetes.io/part-of": "Calico",
+        "k8s-app": "calico-apiserver",
+        "pod-template-hash": "7cbf779f8f"
+      },
+      "node": "k3d-calico-demo-agent-0"
+    },
+    {
+      "id": "calico-system/calico-kube-controllers",
+      "namespace": "calico-system",
+      "app": "calico-kube-controllers",
+      "pod": "calico-kube-controllers-7766946895-68z9t",
+      "ip": "192.168.121.137",
+      "labels": {
+        "app.kubernetes.io/component": "Installation.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "calico-kube-controllers",
+        "app.kubernetes.io/part-of": "Calico",
+        "k8s-app": "calico-kube-controllers",
+        "pod-template-hash": "7766946895"
+      },
+      "node": "k3d-calico-demo-agent-0"
+    },
+    {
+      "id": "calico-system/calico-node",
+      "namespace": "calico-system",
+      "app": "calico-node",
+      "pod": "calico-node-2h28g",
+      "ip": "172.20.0.3",
+      "labels": {
+        "app.kubernetes.io/component": "Installation.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "calico-node",
+        "app.kubernetes.io/part-of": "Calico",
+        "controller-revision-hash": "664f54c559",
+        "k8s-app": "calico-node",
+        "pod-template-generation": "1"
+      },
+      "node": "k3d-calico-demo-agent-0",
+      "host_network": true
+    },
+    {
+      "id": "calico-system/calico-typha",
+      "namespace": "calico-system",
+      "app": "calico-typha",
+      "pod": "calico-typha-567866cb47-cl7gz",
+      "ip": "172.20.0.2",
+      "labels": {
+        "app.kubernetes.io/component": "Installation.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "calico-typha",
+        "app.kubernetes.io/part-of": "Calico",
+        "k8s-app": "calico-typha",
+        "pod-template-hash": "567866cb47"
+      },
+      "node": "k3d-calico-demo-server-0",
+      "host_network": true
+    },
+    {
+      "id": "calico-system/csi-node-driver",
+      "namespace": "calico-system",
+      "app": "csi-node-driver",
+      "pod": "csi-node-driver-bd8br",
+      "ip": "192.168.121.129",
+      "labels": {
+        "app.kubernetes.io/component": "Installation.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "csi-node-driver",
+        "app.kubernetes.io/part-of": "Calico",
+        "controller-revision-hash": "85dfd865c8",
+        "k8s-app": "csi-node-driver",
+        "name": "csi-node-driver",
+        "pod-template-generation": "1"
+      },
+      "node": "k3d-calico-demo-agent-0"
+    },
+    {
+      "id": "calico-system/goldmane",
+      "namespace": "calico-system",
+      "app": "goldmane",
+      "pod": "goldmane-5c5c44c959-msvwr",
+      "ip": "192.168.121.138",
+      "labels": {
+        "app.kubernetes.io/component": "Goldmane.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "goldmane",
+        "app.kubernetes.io/part-of": "Calico",
+        "k8s-app": "goldmane",
+        "pod-template-hash": "5c5c44c959"
+      },
+      "node": "k3d-calico-demo-agent-0"
+    },
+    {
+      "id": "calico-system/whisker",
+      "namespace": "calico-system",
+      "app": "whisker",
+      "pod": "whisker-79546d4678-72m7j",
+      "ip": "192.168.121.133",
+      "labels": {
+        "app.kubernetes.io/component": "Whisker.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "whisker",
+        "app.kubernetes.io/part-of": "Calico",
+        "k8s-app": "whisker",
+        "pod-template-hash": "79546d4678"
+      },
+      "node": "k3d-calico-demo-agent-0"
+    },
+    {
+      "id": "tigera-operator/tigera-operator",
+      "namespace": "tigera-operator",
+      "app": "tigera-operator",
+      "pod": "tigera-operator-55db7b6cc6-7g56c",
+      "ip": "172.20.0.3",
+      "labels": {
+        "k8s-app": "tigera-operator",
+        "name": "tigera-operator",
+        "pod-template-hash": "55db7b6cc6"
+      },
+      "node": "k3d-calico-demo-agent-0",
+      "host_network": true
+    }
+  ]
+}

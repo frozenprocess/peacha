@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: peacha
+  labels:
+    app.kubernetes.io/name: peacha
+    # Admits this namespace's HTTPRoutes onto the shared postiz-gateway, whose
+    # listeners use allowedRoutes.namespaces.from: Selector on this label.
+    shared-gateway-access: "true"

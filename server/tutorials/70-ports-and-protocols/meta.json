@@ -1,0 +1,8 @@
+{
+  "name": "ptee-ports-and-protocols",
+  "flavor": "calico",
+  "title": "Ports & protocols: match the wire, not just the pod",
+  "track": "Policy types, end to end",
+  "order": 70,
+  "summary": "A selector decides which pods a rule governs; protocol and ports decide which packets it matches. Allow prod/backend's TCP HTTP port and leave its UDP echo port closed - and learn how a missing protocol or port field quietly widens a rule."
+}

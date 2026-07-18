@@ -1,0 +1,203 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: peacha-editor
+  namespace: peacha
+  labels:
+    app.kubernetes.io/name: peacha
+    app.kubernetes.io/component: editor
+spec:
+  # SQLite mode (default): pinned to 1 replica because the store is a
+  # ReadWriteOnce PVC (single writer). PostgreSQL mode: set RESULTS_FILE and
+  # SHARE_FILE to postgres:// DSNs, remove the volumeMount + volume, and scale
+  # freely - the only other constraint is SESSION_SECRET (see below).
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: peacha
+      app.kubernetes.io/component: editor
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: peacha
+        app.kubernetes.io/component: editor
+    spec:
+      # Private GHCR package - create this secret first (see README.md):
+      #   kubectl create secret docker-registry ghcr-pull ...
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        # The provisioned volume is group-owned by fsGroup, so the non-root
+        # user (65534) can create/write the SQLite db + its WAL sidecars.
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: editor
+          image: ghcr.io/frozenprocess/peacha-editor:dev
+          imagePullPolicy: Always
+          args: ["--addr", ":8080"]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            # Exam-pass + feedback store. Two options:
+            #
+            #   SQLite (default): a file path on the data PVC below. Single
+            #   replica only (ReadWriteOnce). Passes survive restarts.
+            #     value: /data/exam-results.db
+            #
+            #   PostgreSQL: a postgres:// DSN - enables multi-replica deploys
+            #   and removes the PVC dependency. Store the DSN in a Secret:
+            #     kubectl -n peacha create secret generic peacha-db \
+            #       --from-literal=results-dsn='postgres://user:pass@host/db'
+            #   then reference it:
+            #     valueFrom:
+            #       secretKeyRef:
+            #         name: peacha-db
+            #         key: results-dsn
+            - name: RESULTS_FILE
+              value: /data/exam-results.db
+            # GDPR storage-limitation: stored exam-pass records older than this
+            # many days are purged (on startup and after each write). 0 = keep
+            # forever. Surfaced explicitly so the retention window is visible in
+            # the manifest; the SPA's sign-in privacy notice reflects this value.
+            - name: RESULTS_RETENTION_DAYS
+              value: "30"
+            # Short-link store (separate from exam data). Same two modes as
+            # RESULTS_FILE above. SQLite: a PVC path; PostgreSQL: a DSN.
+            # When unset the root FS is read-only, so short links are disabled
+            # and the SPA falls back to the long self-contained URL.
+            - name: SHARE_FILE
+              value: /data/share-links.db
+            # HMAC key for session cookies. Must be stable so logins survive
+            # restarts (and would survive scale-out). Optional: if the secret is
+            # absent the server mints a random key (sessions reset on restart).
+            # Create it with:
+            #   kubectl -n peacha create secret generic peacha-session \
+            #     --from-literal=session-secret="$(openssl rand -hex 32)"
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: peacha-session
+                  key: session-secret
+                  optional: true
+            # --- OAuth login (exam certification gate) -----------------------
+            # Non-secret auth config, from the peacha-config ConfigMap (optional, so
+            # the Deployment applies before it exists - a missing value just leaves
+            # the setting at its default). Create it with:
+            #   kubectl -n peacha create configmap peacha-config \
+            #     --from-literal=auth-base-url=https://peacha.frozenspace.eu \
+            #     --from-literal=slack-team=<team-id-or-domain> \
+            #     --from-literal=slack-workspace-url=https://<workspace>.slack.com \
+            #     --from-literal=github-org=<org-login>
+            #
+            # AUTH_BASE_URL - public origin OAuth callbacks are built from. TLS
+            # terminates at Cloudflare/the gateway and the origin is HTTP, so set it
+            # explicitly to the HTTPS URL users hit; it must match each provider
+            # app's redirect URI: <AUTH_BASE_URL>/v1/auth/callback/{slack,github}.
+            - name: AUTH_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: peacha-config
+                  key: auth-base-url
+                  optional: true
+            # Membership gates: the Slack workspace / GitHub org a passing user must
+            # belong to; their `sub` is resolved to a person via this at badge time.
+            - name: SLACK_TEAM
+              valueFrom:
+                configMapKeyRef:
+                  name: peacha-config
+                  key: slack-team
+                  optional: true
+            # Optional "sign in to the workspace first" link on the gate - Slack
+            # ignores the team hint for a logged-out browser, so this lets a
+            # stranger establish a workspace session before the OAuth button.
+            - name: SLACK_WORKSPACE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: peacha-config
+                  key: slack-workspace-url
+                  optional: true
+            - name: GITHUB_ORG
+              valueFrom:
+                configMapKeyRef:
+                  name: peacha-config
+                  key: github-org
+                  optional: true
+            # Hard off-switch: hides the exams tab and 404s every exam route even
+            # if the build embeds exams. Set exams-disabled=true in peacha-config.
+            - name: EXAMS_DISABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: peacha-config
+                  key: exams-disabled
+                  optional: true
+            # App credentials, from the peacha-oauth Secret (optional, so the
+            # Deployment still applies before the Secret exists - a missing
+            # credential simply disables that provider). Create it out-of-band:
+            #   kubectl -n peacha create secret generic peacha-oauth \
+            #     --from-literal=slack-client-id=… \
+            #     --from-literal=slack-client-secret=… \
+            #     --from-literal=github-client-id=… \
+            #     --from-literal=github-client-secret=…
+            - name: SLACK_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: peacha-oauth
+                  key: slack-client-id
+                  optional: true
+            - name: SLACK_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: peacha-oauth
+                  key: slack-client-secret
+                  optional: true
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: peacha-oauth
+                  key: github-client-id
+                  optional: true
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: peacha-oauth
+                  key: github-client-secret
+                  optional: true
+          # scratch image: no shell, read-only root by design. SQLite mode
+          # needs the data PVC mounted at /data; PostgreSQL mode needs neither.
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: "1"
+              memory: 256Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: peacha-data

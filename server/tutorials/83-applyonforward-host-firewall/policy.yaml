@@ -1,0 +1,48 @@
+# A wildcard HostEndpoint on every node carries a GlobalNetworkPolicy with
+# applyOnForward: true. applyOnForward extends the HEP's rules to traffic the
+# node FORWARDS (not just traffic to/from the host itself), so the deny fires on
+# every flow that transits a node on its way to an app == 'database' pod. The
+# trailing Allow keeps every other forwarded flow moving - without it the
+# wildcard HEP's default-drop would block everything.
+apiVersion: projectcalico.org/v3
+kind: HostEndpoint
+metadata:
+  name: fw-control-plane
+  labels:
+    role: forward-firewall
+spec:
+  node: policy-llm-control-plane
+  interfaceName: "*"
+  expectedIPs: ["172.18.0.2"]
+---
+apiVersion: projectcalico.org/v3
+kind: HostEndpoint
+metadata:
+  name: fw-worker
+  labels:
+    role: forward-firewall
+spec:
+  node: policy-llm-worker
+  interfaceName: "*"
+  expectedIPs: ["172.18.0.3"]
+---
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: forward-firewall-deny-database
+spec:
+  selector: role == 'forward-firewall'
+  applyOnForward: true
+  types:
+    - Ingress
+    - Egress
+  ingress:
+    - action: Deny
+      destination:
+        selector: app == 'database'
+    - action: Allow
+  egress:
+    - action: Deny
+      destination:
+        selector: app == 'database'
+    - action: Allow

@@ -1,0 +1,44 @@
+# Lesson 45 - what happens when order is NOT enough to decide.
+#
+# Both GlobalNetworkPolicies below select the same pod (prod/backend) and both
+# match the same flow (source app == frontend), one with Allow and one with
+# Deny. Neither sets `spec.order`, so both take the default order of infinity -
+# a tie. Calico's tiebreaker is the policy NAME, compared alphabetically:
+#
+#     aaa-allow-frontend   <- 'a' sorts first -> evaluated first -> Allow wins
+#     zzz-deny-frontend    <- never gets to decide this flow
+#
+# So prod/frontend -> prod/backend is ALLOWED purely because "aaa" < "zzz".
+# Rename them so the deny sorts first (or give it a lower explicit order) and the
+# same flow flips to denied. The lesson: never let two policies that disagree
+# rely on the name tiebreaker - set an explicit order.
+#
+# (The Log action is covered in the lesson body as an illustrative block, not
+# loaded here: Log is observe-only, so it changes the connectivity matrix by
+# nothing - its lesson is about rule evaluation, not an allow/deny you can see.)
+---
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: aaa-allow-frontend
+spec:
+  selector: env == 'prod' && app == 'backend'
+  types:
+    - Ingress
+  ingress:
+    - action: Allow
+      source:
+        selector: app == 'frontend'
+---
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: zzz-deny-frontend
+spec:
+  selector: env == 'prod' && app == 'backend'
+  types:
+    - Ingress
+  ingress:
+    - action: Deny
+      source:
+        selector: app == 'frontend'

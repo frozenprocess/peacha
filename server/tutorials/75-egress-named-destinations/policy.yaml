@@ -1,0 +1,37 @@
+# Lesson 75 - egress control, the direction that matters when a pod is already
+# compromised: where can it send data? We default-deny the frontend's egress and
+# allow exactly two NAMED destinations, neither of which is a hard-coded IP.
+#
+#   1. A GlobalNetworkSet: a labelled, cluster-scoped bag of CIDRs, referenced by
+#      a destination.selector (the named-set form of a bare nets: rule). The set
+#      `approved-egress` (declared in meta.json) carries 203.0.113.0/24 +
+#      scope=approved-egress. The rule allows egress to scope=='approved-egress',
+#      which resolves to that CIDR - so the approved partner API is reachable and
+#      the attacker endpoint (scope=internet, 198.51.100.66) is NOT.
+#
+#   2. A Kubernetes Service: destination.services names backend-svc (prod, selects
+#      app=backend, declared in meta.json). It resolves to the current backend pod
+#      IPs, so the rule follows the backend as it scales - no pod selector, no
+#      hard-coded address.
+#
+# types: [Egress] makes everything not named here default-denied on egress. This
+# is the exfiltration control: a popped frontend can still reach its backend and
+# the one approved partner, and nothing else - not the attacker's box.
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: frontend-egress-allowlist
+spec:
+  selector: env == 'prod' && app == 'frontend'
+  types:
+    - Egress
+  egress:
+    - action: Allow
+      destination:
+        selector: scope == 'approved-egress'
+    - action: Allow
+      protocol: TCP
+      destination:
+        services:
+          name: backend-svc
+          namespace: prod

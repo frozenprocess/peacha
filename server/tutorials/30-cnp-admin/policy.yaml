@@ -1,0 +1,62 @@
+# Lesson 30 - the ClusterNetworkPolicy Admin tier, the cluster-scoped Network
+# Policy API that answers lesson 20's "KNP has no Deny, no order, and can't set
+# cluster-wide rules." Upstream this is AdminNetworkPolicy; this editor models it
+# as a ClusterNetworkPolicy (policy.networking.k8s.io/v1alpha2) selected by
+# spec.tier: Admin, and - following Calico - spells Allow as "Accept".
+#
+# Evaluation is tier by tier, and the FIRST tier to decide wins:
+#
+#     Admin     (platform team)  - Accept/Deny are FINAL; Pass delegates down.
+#     NetworkPolicy (app team)   - the namespaced KNP from earlier lessons.
+#     (Baseline)                 - the floor; added in the NEXT lesson.
+#
+# The scenario: the platform team decides intra-prod traffic is the app team's
+# business, but everything coming from OUTSIDE prod is theirs to deny.
+#
+#   1. App NetworkPolicy: prod/backend admits prod/frontend (and, because it is
+#      now selected by a policy, default-denies every other source itself).
+#   2. Admin CNP (priority 10): Pass ingress that originates inside prod (hand it
+#      to the app team's NetworkPolicy), Deny everything else with a FINAL veto.
+#
+# NOTE: there is no Baseline floor yet. A flow Admin Passes that NO NetworkPolicy
+# covers therefore defaults to ALLOW - the gap the Baseline lesson closes next.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-allow-frontend
+  namespace: prod
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+---
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
+metadata:
+  name: prod-admin-pass-prod-deny-rest
+spec:
+  tier: Admin
+  priority: 10
+  subject:
+    namespaces:
+      matchLabels:
+        env: prod
+  ingress:
+    - name: pass-from-prod
+      action: Pass
+      from:
+        - namespaces:
+            matchLabels:
+              env: prod
+    - name: deny-everything-else
+      action: Deny
+      from:
+        - namespaces: {}

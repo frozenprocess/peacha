@@ -1,0 +1,8 @@
+{
+  "name": "ptee-staged-and-lockout",
+  "flavor": "calico",
+  "title": "Ship it safely: staged policy and avoiding lockout",
+  "track": "Policy types, end to end",
+  "order": 85,
+  "summary": "The scariest moment in network policy is the first Deny in production. A StagedGlobalNetworkPolicy runs through the same matching machinery but enforces nothing - a dry run that changes the connectivity matrix by exactly nothing - so you can preview a lockdown before it bites. Plus the allow-first safe-mode habit that keeps you from locking yourself out."
+}

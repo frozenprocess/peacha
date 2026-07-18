@@ -1,0 +1,11 @@
+{
+  "name": "ptee-applyonforward-host-firewall",
+  "flavor": "calico",
+  "title": "Firewall forwarded traffic: applyOnForward",
+  "track": "Policy types, end to end",
+  "order": 83,
+  "summary": "Lesson 82 firewalled a node's own traffic. This firewalls the traffic a node *forwards*: a GlobalNetworkPolicy with applyOnForward on a wildcard HostEndpoint polices every flow that transits the host on its way to a workload - so one cluster-wide rule can quarantine an entire class of pods (app == 'database'), below and independent of any NetworkPolicy.",
+  "external_endpoints": [
+    { "id": "world/observer", "ip": "203.0.113.5", "labels": { "scope": "internet" } }
+  ]
+}

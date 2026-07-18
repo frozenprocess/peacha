@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Peacha - The Network Policy Playground</title>
+  <!--
+    SEO block. The Go server (server/seo.go) rewrites this on every HTML
+    response: it substitutes __SEO_ORIGIN__ with the request's origin, and for
+    a tutorial deep link (/?tutorial=<slug>) it replaces the whole
+    seo:start..seo:end region + the <title> + the #root body with that
+    lesson's prerendered content. Keep the delimiter comments intact.
+  -->
+  <!-- seo:start -->
+  <meta name="description" content="Peacha is a free, in-browser playground for Kubernetes and Calico network policies. Write policy YAML and instantly see the connectivity it allows, with guided read-along tutorials." />
+  <link rel="canonical" href="__SEO_ORIGIN__/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Peacha" />
+  <meta property="og:title" content="Peacha - The Network Policy Playground" />
+  <meta property="og:description" content="A free, in-browser playground for Kubernetes and Calico network policies, with guided read-along tutorials." />
+  <meta property="og:url" content="__SEO_ORIGIN__/" />
+  <meta property="og:image" content="__SEO_ORIGIN__/og-card.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Peacha - The Network Policy Playground" />
+  <meta name="twitter:description" content="A free, in-browser playground for Kubernetes and Calico network policies, with guided read-along tutorials." />
+  <meta name="twitter:image" content="__SEO_ORIGIN__/og-card.png" />
+  <!-- seo:end -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('peacha-theme');
+        if (t !== 'light' && t !== 'dark') {
+          t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

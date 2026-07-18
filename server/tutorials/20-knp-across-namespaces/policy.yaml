@@ -1,0 +1,49 @@
+# Lesson 20 - the two things about KNP selectors that trip everyone up, plus the
+# limits that motivate the rest of this track.
+#
+# We protect prod/database and admit exactly two sources:
+#
+#   - peer 1: prod/backend            (podSelector only -> same namespace, prod)
+#   - peer 2: dev/backend ONLY        (namespaceSelector AND podSelector in ONE
+#                                       list item -> "app=backend, in env=dev")
+#
+# The rule that catches everyone: within a SINGLE `-` peer item the selectors
+# are ANDed; SEPARATE `-` items are ORed. Peer 2 is one item, so it means
+# "a backend pod that is also in a dev namespace" = dev/backend only. Split it
+# onto two items and it would widen to "(any backend pod) OR (every dev pod)".
+#
+# The podSelector uses matchExpressions (set logic) instead of matchLabels to
+# show the form: `app In [backend]` is the same as matchLabels app=backend, but
+# In/NotIn/Exists/DoesNotExist are how you express anything matchLabels can't.
+#
+# What this policy CANNOT do - and why the next lessons exist:
+#   * no explicit Deny action (you can only enumerate allowed sources),
+#   * no ordering/priority between policies,
+#   * it is namespaced - it can never govern cluster-scoped traffic or a node.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: database-allow-backends
+  namespace: prod
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [database]
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: backend
+        - namespaceSelector:
+            matchLabels:
+              env: dev
+          podSelector:
+            matchLabels:
+              app: backend
+      ports:
+        - protocol: TCP
+          port: 8080

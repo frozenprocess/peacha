@@ -1,0 +1,47 @@
+# Lesson 60 - the GlobalNetworkPolicy, Calico's CLUSTER-SCOPED kind. Where the
+# namespaced NetworkPolicy of lesson 50 covered only prod, one GNP covers every
+# namespace at once.
+#
+# `namespaceSelector: has(projectcalico.org/name)` is the canonical "every
+# namespaced pod in the cluster" selector - Calico auto-labels each namespaced
+# pod with projectcalico.org/name. Combined with types: [Ingress, Egress] and a
+# single carve-out, EVERYTHING that isn't the carve-out (in BOTH directions, in
+# BOTH prod and dev) hits the default-deny.
+#
+# The one carve-out: the web tier may reach the app tier on TCP 8080. We need
+# both an egress rule (so the frontend may send) and an ingress rule (so the
+# backend may receive) - Calico checks both ends of a connection.
+#
+# order: 1001 puts this above Kubernetes NetworkPolicies (which Calico ranks at
+# 1000), so it acts as a baseline beneath any app-team KNP.
+#
+# NOTE the deliberate looseness called out in the lesson: the carve-out keys on
+# tier alone, not env, so dev/frontend -> prod/backend is also allowed. Tightening
+# that env boundary is a later lesson; here the teaching point is the cluster-wide
+# default-deny itself.
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: cluster-default-deny-allow-web-to-app
+spec:
+  order: 1001
+  namespaceSelector: has(projectcalico.org/name)
+  types:
+    - Ingress
+    - Egress
+  ingress:
+    - action: Allow
+      protocol: TCP
+      source:
+        selector: tier == 'web'
+      destination:
+        selector: tier == 'app'
+        ports: [8080]
+  egress:
+    - action: Allow
+      protocol: TCP
+      source:
+        selector: tier == 'web'
+      destination:
+        selector: tier == 'app'
+        ports: [8080]

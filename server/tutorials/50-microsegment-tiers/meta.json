@@ -1,0 +1,8 @@
+{
+  "name": "ptee-microsegment-tiers",
+  "flavor": "calico",
+  "title": "Microsegment the tiers: web to app to data, and no skipping",
+  "track": "Policy types, end to end",
+  "order": 50,
+  "summary": "Put the Calico NetworkPolicy to work on a real pattern: enforce that traffic in prod can only flow web to app to data. Frontend reaches backend, backend reaches database, but frontend can never jump straight to the database - the classic tiered-app least-privilege shape in one policy."
+}

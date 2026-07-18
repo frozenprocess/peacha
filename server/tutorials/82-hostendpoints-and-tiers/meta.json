@@ -1,0 +1,8 @@
+{
+  "name": "ptee-hostendpoints-and-tiers",
+  "flavor": "calico",
+  "title": "Firewall the nodes: HostEndpoints and a custom Tier",
+  "track": "Policy types, end to end",
+  "order": 82,
+  "summary": "Lesson 80 secured a control-plane pod; this secures the nodes themselves. A HostEndpoint makes a node's own interface a policy target (a host/<name> row), and a custom Calico Tier with its own defaultAction holds the GlobalNetworkPolicy that firewalls them - the one layer the namespace-scoped Network Policy API can never reach."
+}

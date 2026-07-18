@@ -1,0 +1,9 @@
+{
+  "name": "ptee-cnp-baseline",
+  "flavor": "calico",
+  "title": "ClusterNetworkPolicy: the Baseline tier (the default-deny floor)",
+  "track": "Kubernetes Network Policy - Upcoming",
+  "order": 35,
+  "feedback": true,
+  "summary": "The bottom tier of the Network Policy API. A Baseline ClusterNetworkPolicy is the cluster-wide default-deny floor: evaluated last, it catches every flow that Admin passed and no NetworkPolicy allowed, so 'forgot to write a policy' fails closed instead of open."
+}

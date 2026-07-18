@@ -1,0 +1,27 @@
+# Build context = editor repo root. Keep it lean: the submodule source trees
+# under third_party/ are needed for the Go build, but git metadata, node deps,
+# and the generated SPA embed dir are not (the web stage rebuilds the SPA and
+# the Dockerfile copies it into server/dist/).
+
+# Git metadata (superproject + submodule gitdir pointers).
+.git
+**/.git
+.gitmodules
+
+# Node + frontend build output (the web stage runs npm ci itself).
+web/node_modules
+web/dist
+**/*.tsbuildinfo
+
+# Compiled binaries.
+bin/
+
+# The SPA embed dir is rebuilt by the web stage and copied back in, so the
+# host copy is noise. (The baseline snapshots, tutorials, and exams embed dirs
+# are NOT ignored - they must reach the build context for the //go:embed to
+# resolve. exams is mirrored from exams/ by `make exams-sync` before build.)
+server/dist
+
+# Editor / OS cruft.
+*.log
+.DS_Store

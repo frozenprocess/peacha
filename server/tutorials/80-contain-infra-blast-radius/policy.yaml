@@ -1,0 +1,32 @@
+# Lesson 80 - network policy isn't only for app pods. The most damaging blast
+# radius in a cluster is the CONTROL PLANE: etcd holds the entire API state, so
+# anything that can reach it can read or rewrite the whole cluster. No
+# application pod has any business talking to it.
+#
+# The control-plane pods in this cluster carry tier == 'control-plane' and a
+# per-component label (component: etcd | kube-apiserver | kube-scheduler |
+# kube-controller-manager). This GlobalNetworkPolicy selects etcd and admits
+# ingress ONLY from the kube-apiserver. With no catch-all, every other source -
+# every app pod AND every ordinary add-on - hits the implicit default-deny.
+#
+# Why "from the apiserver" and not a broad allow: etcd's only legitimate client
+# is the kube-apiserver. Scheduler, controller-manager, and the add-ons all go
+# THROUGH the apiserver, never straight to etcd.
+#
+# This GNP secures the datastore (a pod). The next step down - firewalling the
+# NODES' own interfaces so no pod can reach the host at all - needs a
+# HostEndpoint, which makes a node's interface a policy target (a host/<name> row
+# in the matrix). That's its own topic; here we lock the crown jewels with an
+# ordinary GlobalNetworkPolicy, which is most of the win.
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: etcd-allow-apiserver-only
+spec:
+  selector: component == 'etcd'
+  types:
+    - Ingress
+  ingress:
+    - action: Allow
+      source:
+        selector: component == 'kube-apiserver'

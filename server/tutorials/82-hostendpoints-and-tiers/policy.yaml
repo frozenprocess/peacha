@@ -1,0 +1,76 @@
+# Lesson 82 - policy for the NODES, and the Calico Tier that holds it.
+#
+# Lesson 80 locked down a control-plane POD (etcd). This goes one layer deeper:
+# the node's OWN interface. A pod's interface is a WorkloadEndpoint; a node's is
+# a HostEndpoint. Defining one makes the host itself a policy target - it shows
+# up in the connectivity matrix as a host/<name> row, and a GlobalNetworkPolicy
+# can firewall it exactly like a pod.
+#
+# Node identities are taken from the embedded baseline (verified, not guessed):
+#     policy-llm-control-plane  172.18.0.2
+#     policy-llm-worker         172.18.0.3
+# Both HostEndpoints are labelled role: node so one policy selects every node.
+#
+# THE INTEROP POINT: the upstream Network Policy API (ClusterNetworkPolicy) and
+# Kubernetes NetworkPolicy are pod/namespace-scoped. A HostEndpoint lives in NO
+# namespace, so NO NPA subject and NO k8s NetworkPolicy can ever select it - only
+# a Calico GlobalNetworkPolicy can. To make that concrete we put the host
+# firewall in its OWN custom Tier:
+#
+#   - kind: Tier defines the tier and its defaultAction. defaultAction is what
+#     happens to a packet a policy in the tier SELECTS but no rule MATCHES:
+#     Deny ends it here; Pass would delegate down.
+#   - order ranks tiers; this one's high order places it BELOW the default tier
+#     (and below an NPA Baseline floor, if present) - yet it STILL governs host
+#     traffic, because the pod/namespace tiers above never matched a host in the
+#     first place.
+#
+# The firewall GNP: nodes accept ingress only from other nodes or from cluster
+# infrastructure (has(k8s-app) add-ons, or the control plane). App pods - which
+# carry env/app/tier labels and no k8s-app - match nothing, so the tier's
+# defaultAction: Deny drops them.
+---
+apiVersion: projectcalico.org/v3
+kind: Tier
+metadata:
+  name: host-firewall
+spec:
+  order: 1000000
+  defaultAction: Deny
+---
+apiVersion: projectcalico.org/v3
+kind: HostEndpoint
+metadata:
+  name: node-control-plane
+  labels:
+    role: node
+spec:
+  node: policy-llm-control-plane
+  interfaceName: "*"
+  expectedIPs: ["172.18.0.2"]
+---
+apiVersion: projectcalico.org/v3
+kind: HostEndpoint
+metadata:
+  name: node-worker
+  labels:
+    role: node
+spec:
+  node: policy-llm-worker
+  interfaceName: "*"
+  expectedIPs: ["172.18.0.3"]
+---
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: node-host-firewall
+spec:
+  tier: host-firewall
+  order: 100
+  selector: role == 'node'
+  types:
+    - Ingress
+  ingress:
+    - action: Allow
+      source:
+        selector: role == 'node' || has(k8s-app) || tier == 'control-plane'

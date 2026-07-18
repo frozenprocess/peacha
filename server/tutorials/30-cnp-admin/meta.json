@@ -1,0 +1,9 @@
+{
+  "name": "ptee-cnp-admin",
+  "flavor": "calico",
+  "title": "ClusterNetworkPolicy: the Admin tier",
+  "track": "Kubernetes Network Policy - Upcoming",
+  "order": 30,
+  "feedback": true,
+  "summary": "The cluster-scoped Network Policy API and its top tier. An Admin ClusterNetworkPolicy sets boundaries no app team can override - its Accept and Deny are final - while Pass delegates the decision down to the developer's NetworkPolicy."
+}

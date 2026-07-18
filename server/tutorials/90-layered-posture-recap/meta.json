@@ -1,0 +1,9 @@
+{
+  "name": "ptee-layered-posture-recap",
+  "flavor": "calico",
+  "title": "The layered posture: all four policy types together",
+  "track": "Policy types, end to end",
+  "order": 90,
+  "feedback": true,
+  "summary": "A read-only recap of the whole track: how Kubernetes NetworkPolicy, ClusterNetworkPolicy, Calico NetworkPolicy and GlobalNetworkPolicy differ, when to reach for each, and how precedence resolves a flow across all of them at once."
+}

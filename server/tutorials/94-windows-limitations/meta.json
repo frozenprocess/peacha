@@ -1,0 +1,9 @@
+{
+  "name": "ptee-windows-limitations",
+  "flavor": "calico",
+  "title": "Windows limitations: when a policy doesn't survive HNS",
+  "track": "Windows (HNS)",
+  "order": 94,
+  "feedback": true,
+  "summary": "The HNS dataplane cannot express every Calico rule. Rules it can't render are silently dropped - and a dropped Deny is a security hole. Load a negated Deny, watch it vanish from the Windows (HNS) tab, and learn the four divergences that matter when you author policy for a mixed cluster."
+}

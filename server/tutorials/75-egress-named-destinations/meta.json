@@ -1,0 +1,18 @@
+{
+  "name": "ptee-egress-named-destinations",
+  "flavor": "calico",
+  "title": "Egress to named destinations: stop the data exfil path",
+  "track": "Policy types, end to end",
+  "order": 75,
+  "summary": "Ingress controls who reaches you; egress controls where your data can go - the path that matters in a breach. Default-deny the frontend's egress and allow only two named destinations: an approved external CIDR via a GlobalNetworkSet, and an in-cluster backend via a Kubernetes Service.",
+  "external_endpoints": [
+    {"id": "world/approved-api", "ip": "203.0.113.10", "labels": {"scope": "approved-egress"}},
+    {"id": "world/attacker", "ip": "198.51.100.66", "labels": {"scope": "internet"}}
+  ],
+  "global_network_sets": [
+    {"name": "approved-egress", "nets": ["203.0.113.0/24"], "labels": {"scope": "approved-egress"}}
+  ],
+  "services": [
+    {"name": "backend-svc", "namespace": "prod", "selector": {"app": "backend"}, "ports": [{"port": 8080, "protocol": "TCP"}]}
+  ]
+}

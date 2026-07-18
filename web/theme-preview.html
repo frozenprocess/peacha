@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Peacha - theme preview (kitchen sink)</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- THE THEME UNDER EDIT.
+       This links the *real* stylesheet, so the workflow is:
+         1. open this file in a browser (file:// is fine - no server needed)
+         2. edit editor/web/src/styles.css
+         3. refresh - every component below repaints with the new theme.
+       Every specimen below uses the exact class names the React components
+       emit, so what you see here is what the live app renders.
+       The light/dark toggle (top-right) flips data-theme on <html>, exactly
+       like the app's toolbar toggle. -->
+  <link rel="stylesheet" href="./src/styles.css" />
+
+  <!-- Preview-only scaffolding. All selectors are namespaced `.ks-*` so they
+       never collide with (or leak into) the theme. The chrome reads the same
+       design tokens as the app, so the gallery itself flips with dark mode. -->
+  <style>
+    body { padding: 0; background: var(--surface); color: var(--on-surface); }
+    .ks-page { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.5rem 6rem; }
+    .ks-page > header { margin-bottom: 1.5rem; }
+    .ks-page > header h1 { margin: 0 0 0.25rem; font-size: 22px; font-weight: 800; letter-spacing: -0.01em; color: var(--primary); }
+    .ks-page > header p { margin: 0; color: var(--on-surface-variant); font-size: 13px; max-width: 60ch; }
+    .ks-section { margin: 2rem 0; }
+    .ks-section > h2 {
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;
+      color: var(--on-surface-muted); border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.35rem; margin: 0 0 0.9rem;
+    }
+    /* A "specimen" frame - neutral chrome around each component so its own
+       borders/backgrounds read clearly against the page. */
+    .ks-frame {
+      border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden;
+      background: var(--surface-container-lowest); margin-bottom: 0.9rem; box-shadow: var(--shadow-sm);
+    }
+    .ks-frame.ks-tall { height: 360px; display: flex; flex-direction: column; }
+    .ks-frame.ks-stage { height: 300px; position: relative; background: var(--surface); }
+    .ks-label { font-size: 11px; color: var(--on-surface-muted); margin: 0 0 0.35rem; }
+    .ks-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+    .ks-row > * { flex: 1 1 320px; min-width: 0; }
+
+    /* palette swatch board */
+    .ks-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.6rem; }
+    .ks-swatch { border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden; font-size: 11px; background: var(--surface-container-lowest); }
+    .ks-swatch .ks-chip { height: 46px; border-bottom: 1px solid var(--border-subtle); }
+    .ks-swatch .ks-meta { padding: 0.3rem 0.45rem; }
+    .ks-swatch .ks-meta b { display: block; font-weight: 700; }
+    .ks-swatch .ks-meta code { color: var(--on-surface-muted); }
+
+    /* floating theme toggle - mirrors the app's toolbar button */
+    .ks-theme-toggle {
+      position: fixed; top: 1rem; right: 1rem; z-index: 50;
+      font-size: 16px; line-height: 1; padding: 0.4rem 0.6rem;
+      border-radius: var(--radius-pill); box-shadow: var(--shadow-md);
+    }
+  </style>
+</head>
+
+<body>
+<button class="ks-theme-toggle" onclick="(function(){var e=document.documentElement;var d=e.getAttribute('data-theme')==='dark';e.setAttribute('data-theme',d?'light':'dark');this.textContent=d?'☾':'☀';}).call(this)" title="toggle light / dark">☾</button>
+<div class="ks-page">
+  <header>
+    <h1>Peacha - theme preview</h1>
+    <p>
+      A static gallery of every styled element in the editor. It links the real
+      <code>src/styles.css</code>; edit that file and refresh to retheme the whole app.
+      Monaco and the React-Flow graph are JS-driven, so those two are mocked with
+      the same DOM/classes the live components produce.
+    </p>
+  </header>
+
+  <!-- ============================ PALETTE ============================ -->
+  <section class="ks-section">
+    <h2>Palette (live design tokens)</h2>
+    <p class="ks-label">Each chip reads the CSS custom property from <code>styles.css</code>, so the board re-renders live as you edit tokens - and flips with the dark toggle (top-right). Edit the <code>:root</code> / <code>[data-theme="dark"]</code> blocks to retheme.</p>
+    <div class="ks-swatches">
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--primary)"></div><div class="ks-meta"><b>primary</b><code>--primary</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--primary-hover)"></div><div class="ks-meta"><b>primary hover</b><code>--primary-hover</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--primary-container)"></div><div class="ks-meta"><b>primary container</b><code>--primary-container</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--secondary-container)"></div><div class="ks-meta"><b>secondary</b><code>--secondary-container</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--tertiary)"></div><div class="ks-meta"><b>tertiary</b><code>--tertiary</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--surface)"></div><div class="ks-meta"><b>surface</b><code>--surface</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--surface-container)"></div><div class="ks-meta"><b>surface container</b><code>--surface-container</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--on-surface)"></div><div class="ks-meta"><b>on surface (text)</b><code>--on-surface</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--border)"></div><div class="ks-meta"><b>border</b><code>--border</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--error)"></div><div class="ks-meta"><b>error</b><code>--error</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--allow-fg)"></div><div class="ks-meta"><b>allow</b><code>--allow-fg</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--deny-fg)"></div><div class="ks-meta"><b>deny</b><code>--deny-fg</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--code-bg)"></div><div class="ks-meta"><b>code surface</b><code>--code-bg</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--oc-policy)"></div><div class="ks-meta"><b>origin policy</b><code>--oc-policy</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--oc-profile)"></div><div class="ks-meta"><b>origin profile</b><code>--oc-profile</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--oc-endpoint)"></div><div class="ks-meta"><b>origin endpoint</b><code>--oc-endpoint</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--oc-dispatch)"></div><div class="ks-meta"><b>origin dispatch</b><code>--oc-dispatch</code></div></div>
+      <div class="ks-swatch"><div class="ks-chip" style="background:var(--oc-static)"></div><div class="ks-meta"><b>origin static</b><code>--oc-static</code></div></div>
+    </div>
+  </section>
+
+  <!-- ============================ CONTROLS ============================ -->
+  <section class="ks-section">
+    <h2>Form controls &amp; type</h2>
+    <div class="ks-frame" style="padding:1rem">
+      <div class="ks-row" style="align-items:center">
+        <button>button</button>
+        <button class="link">link button</button>
+        <input value="text input" />
+        <input value="focused (border accent)" autofocus />
+        <select><option>select option</option></select>
+        <span class="muted">muted text</span>
+        <code>inline code</code>
+      </div>
+      <textarea class="labels" style="margin-top:0.6rem" rows="2">app=web
+tier=frontend</textarea>
+    </div>
+  </section>
+
+  <!-- ====================== LAYOUT CHROME ====================== -->
+  <section class="ks-section">
+    <h2>Resizable-layout chrome</h2>
+    <p class="ks-label">Splitters (drag seams), floating pane controls, and the collapsed strip/bar states.</p>
+    <div class="ks-row">
+      <div>
+        <p class="ks-label">splitters - default / :hover (forced below)</p>
+        <div class="ks-frame" style="padding:1rem; display:flex; gap:1rem; align-items:center">
+          <span>col</span><div class="splitter splitter-col" style="height:48px"></div>
+          <span>col hover</span><div class="splitter splitter-col" style="height:48px; background:var(--primary)"></div>
+          <span style="margin-left:1rem">row</span>
+          <div style="flex:1"><div class="splitter splitter-row"></div><div class="splitter splitter-row" style="background:var(--primary); margin-top:6px"></div></div>
+        </div>
+      </div>
+      <div>
+        <p class="ks-label">pane controls (collapse / maximize / restore)</p>
+        <div class="ks-frame" style="padding:1rem">
+          <div class="pane-ctl" style="position:static; display:inline-flex">
+            <button title="collapse">–</button>
+            <button title="maximize">⤢</button>
+            <button title="restore">⤡</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ks-row">
+      <div style="flex:0 0 200px">
+        <p class="ks-label">collapsed top pane (strip)</p>
+        <div class="ks-frame" style="height:120px; display:flex">
+          <div class="pane-strip">
+            <button class="strip-btn" title="expand">+</button>
+            <span class="strip-label">topology</span>
+          </div>
+          <div style="flex:1; background:var(--surface-container-lowest)"></div>
+        </div>
+      </div>
+      <div>
+        <p class="ks-label">collapsed view (bar)</p>
+        <div class="ks-frame">
+          <div class="view-bar">
+            <button class="strip-btn" title="expand view">+</button>
+            <span>dataplane view</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ TOOLBAR ============================ -->
+  <section class="ks-section">
+    <h2>Toolbar</h2>
+    <div class="ks-frame">
+      <div class="toolbar">
+        <h1>Peacha</h1>
+        <label>example:
+          <select><option>load policies…</option></select>
+        </label>
+        <button>share</button>
+        <button>load topology</button>
+        <button>reset workloads</button>
+        <span class="baseline-info">baseline: 12 system pods across 3 ns</span>
+        <button>capabilities</button>
+        <span class="status">evaluating…</span>
+      </div>
+    </div>
+    <p class="ks-label">status - error variant:</p>
+    <div class="ks-frame">
+      <div class="toolbar">
+        <h1>Peacha</h1>
+        <button>share</button>
+        <span class="status error">topology: failed to load snapshot</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== CAPABILITIES DRAWER ====================== -->
+  <section class="ks-section">
+    <h2>Capabilities drawer</h2>
+    <p class="ks-label">(shown inline here; in the app it floats top-right with a shadow)</p>
+    <div class="ks-frame" style="padding:1rem; background:var(--surface)">
+      <div class="caps-drawer" style="position:static; max-height:none; width:auto; box-shadow:0 6px 24px rgba(0,0,0,0.18)">
+        <div class="caps-head">
+          <strong>engine capabilities</strong>
+          <button class="link">close</button>
+        </div>
+        <table class="caps-table">
+          <tbody>
+            <tr class="cap-ok"><td class="cap-mark">✓</td><td class="cap-name">selector matching</td><td class="cap-notes"></td></tr>
+            <tr class="cap-ok"><td class="cap-mark">✓</td><td class="cap-name">namespace selectors</td><td class="cap-notes"></td></tr>
+            <tr class="cap-no"><td class="cap-mark">✗</td><td class="cap-name">named ports</td><td class="cap-notes">render natively in iptables/nft; matrix denies</td></tr>
+            <tr class="cap-no"><td class="cap-mark">✗</td><td class="cap-name">FQDN egress</td><td class="cap-notes">needs the DNS stub to resolve</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== TOPOLOGY PANE ====================== -->
+  <section class="ks-section">
+    <h2>Topology pane - namespaces tab</h2>
+    <div class="ks-frame ks-tall">
+      <div class="pane-header">
+        <button class="pane-tab active">namespaces</button>
+        <button class="pane-tab">probes</button>
+        <button class="pane-tab">resources</button>
+        <button class="pane-action">+ ns</button>
+        <span class="pane-info" title="system layer info">ⓘ</span>
+      </div>
+      <div class="topology">
+        <div class="topology-section">
+          <div class="topology-section-header"><span>namespaces</span></div>
+          <div class="ns">
+            <div class="ns-header">
+              <input class="ns-name" value="default" />
+              <button class="ns-add">+ pod</button>
+              <button class="ns-remove" title="remove namespace">×</button>
+            </div>
+            <textarea class="labels" rows="2">kubernetes.io/metadata.name=default</textarea>
+            <div class="pods">
+              <div class="pod">
+                <div class="pod-header">
+                  <input class="pod-name" value="web" />
+                  <span class="pod-ip">10.244.0.5</span>
+                  <button class="pod-adv">advanced</button>
+                  <button class="pod-remove" title="remove pod">×</button>
+                </div>
+                <textarea class="labels" rows="1">app=web</textarea>
+              </div>
+              <div class="pod">
+                <div class="pod-header">
+                  <input class="pod-name" value="api" />
+                  <span class="pod-ip">10.244.0.6</span>
+                  <button class="pod-adv">advanced</button>
+                  <button class="pod-remove" title="remove pod">×</button>
+                </div>
+                <textarea class="labels" rows="1">app=api</textarea>
+                <div class="pod-advanced">
+                  <label class="field"><span>service account</span><input value="api-sa" /></label>
+                  <label class="field"><span>node</span><input value="worker-1" /></label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2 style="margin-top:2rem">Topology pane - probes tab</h2>
+    <div class="ks-frame">
+      <div class="topology" style="overflow:visible">
+        <div class="probes">
+          <div class="probe probe-card">
+            <div class="probe-row">
+              <input class="probe-name" value="tcp" />
+              <input class="probe-port" value="8080" />
+              <select class="probe-proto"><option>tcp</option></select>
+              <button class="pod-adv">knobs</button>
+              <button class="probe-remove ns-remove" title="remove">×</button>
+            </div>
+            <div class="probe-row probe-knobs">
+              <label class="field"><span>from</span><input value="app=web" /></label>
+              <label class="field"><span>to</span><input value="app=api" /></label>
+              <label class="field"><span>path</span><input value="/healthz" /></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2 style="margin-top:2rem">Topology pane - resources tab</h2>
+    <div class="ks-frame">
+      <div class="topology" style="overflow:visible">
+        <div class="resources">
+          <div class="res-section">
+            <div class="res-head"><h4>network sets</h4></div>
+            <p class="res-hint">CIDR-labelled sets referenced by selectors</p>
+            <div class="res-item">
+              <button class="res-remove">×</button>
+              <input class="res-name" value="corp-cidrs" />
+              <label class="field field-col"><span>cidrs</span><textarea class="labels" rows="1">10.0.0.0/8</textarea></label>
+              <label class="field field-col"><span>labels</span><textarea class="labels" rows="1">scope=corp</textarea></label>
+            </div>
+            <p class="res-empty">no global network sets yet</p>
+          </div>
+          <div class="flags">
+            <h4>flags</h4>
+            <label class="flag"><input type="checkbox" checked /> evaluate staged policies</label>
+            <label class="flag"><input type="checkbox" /> strict lint</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== POLICY PANE ====================== -->
+  <section class="ks-section">
+    <h2>Policy pane header (Monaco host mocked)</h2>
+    <div class="ks-frame">
+      <div class="pane" style="height:200px">
+        <h2>policies (YAML, multi-doc separated by ---)</h2>
+        <div class="monaco-host" style="background:var(--code-bg); color:var(--code-text); font-family:var(--font-mono); font-size:12px; padding:0.6rem; white-space:pre">apiVersion: projectcalico.org/v3
+kind: NetworkPolicy
+metadata:
+  name: allow-web-to-api
+spec:
+  selector: app == 'api'
+  ingress:
+    - action: Allow
+      source:
+        selector: app == 'web'</div>
+      </div>
+    </div>
+    <p class="ks-label">Monaco renders its own theme; this is just a placeholder so the pane chrome is visible.</p>
+  </section>
+
+  <!-- ====================== VIEW PANE TABS + BANNERS ====================== -->
+  <section class="ks-section">
+    <h2>View pane - tabs, selection, error &amp; warning banners</h2>
+    <div class="ks-frame">
+      <div class="view-tabs">
+        <button class="tab">matrix</button>
+        <button class="tab active">graph</button>
+        <button class="tab">bpf</button>
+        <button class="tab">iptables</button>
+        <button class="tab">nftables</button>
+        <span class="selected-hint">selected: <code>default/web</code><button class="link">clear</button></span>
+      </div>
+      <div class="errors">error: failed to parse policy "allow-web": spec.selector is required</div>
+      <div class="warnings">
+        <div>⚠ policy "allow-all" selects every endpoint - likely too broad</div>
+        <div>⚠ ingress rule has no source - matches all sources</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== MATRIX ====================== -->
+  <section class="ks-section">
+    <h2>Matrix view</h2>
+    <div class="ks-frame" style="padding:0.75rem">
+      <div class="matrix-block">
+        <h3>tcp:8080</h3>
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="sel"><span class="rotate">default/web</span></th>
+              <th><span class="rotate">default/api</span></th>
+              <th class="system"><span class="rotate">kube-system/dns</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="sel">
+              <th class="sel">default/web</th>
+              <td class="self">·</td>
+              <td class="allow">✓</td>
+              <td class="deny">✗</td>
+            </tr>
+            <tr>
+              <th>default/api</th>
+              <td class="allow dim">✓</td>
+              <td class="self">·</td>
+              <td class="deny dim">✗</td>
+            </tr>
+            <tr class="system">
+              <th class="system">kube-system/dns</th>
+              <td class="deny dim">✗</td>
+              <td class="allow dim">✓</td>
+              <td class="self">·</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== GRAPH NODES ====================== -->
+  <section class="ks-section">
+    <h2>Graph - nodes, namespace groups, legend</h2>
+    <div class="ks-frame ks-stage">
+      <!-- legend is position:absolute top/right within a relative stage -->
+      <div class="legend">
+        <button class="legend-item"><span class="legend-swatch" style="background:#137333;border-color:#137333"></span>tcp</button>
+        <button class="legend-item off"><span class="legend-swatch" style="background:transparent;border-color:#bbb"></span>udp</button>
+      </div>
+
+      <!-- a namespace group box with pods laid out inside -->
+      <div class="ns-group" style="position:absolute; left:20px; top:20px; width:360px; height:200px;">
+        <div class="ns-group-label">default</div>
+        <div style="position:absolute; left:24px; top:46px;">
+          <div class="pod-node">
+            <div class="pod-node-name">web</div>
+            <div class="pod-node-labels">
+              <div class="pod-node-label"><span class="k">app</span>=<span class="v">web</span></div>
+              <div class="pod-node-label"><span class="k">tier</span>=<span class="v">frontend</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute; left:190px; top:46px;">
+          <div class="pod-node selected">
+            <div class="pod-node-name">api</div>
+            <div class="pod-node-labels">
+              <div class="pod-node-label"><span class="k">app</span>=<span class="v">api</span></div>
+              <div class="pod-node-label muted">…+2</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ns-group system" style="position:absolute; left:20px; top:236px; width:200px; height:48px;">
+        <div class="ns-group-label">kube-system</div>
+      </div>
+      <div style="position:absolute; left:240px; top:240px;">
+        <div class="pod-node system">
+          <div class="pod-node-name">coredns</div>
+          <div class="pod-node-labels"><div class="pod-node-label"><span class="k">k8s-app</span>=<span class="v">kube-dns</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== ORIGIN LEGEND ====================== -->
+  <section class="ks-section">
+    <h2>Origin legend (bpf / iptables / nft coloring)</h2>
+    <div class="ks-frame">
+      <div class="origin-legend">
+        <span class="origin-key origin-policy"><span class="origin-swatch"></span>policy</span>
+        <span class="origin-key origin-profile"><span class="origin-swatch"></span>profile (ns default)</span>
+        <span class="origin-key origin-endpoint"><span class="origin-swatch"></span>endpoint</span>
+        <span class="origin-key origin-dispatch"><span class="origin-swatch"></span>dispatch</span>
+        <span class="origin-key origin-static"><span class="origin-swatch"></span>static / scaffolding</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== BPF VIEW ====================== -->
+  <section class="ks-section">
+    <h2>BPF view</h2>
+    <div class="ks-frame ks-tall">
+      <div class="bpf-view">
+        <div class="bpf-controls">
+          <label>direction <select><option>both</option></select></label>
+          <label>ip <select><option>auto</option></select></label>
+          <label>endpoint <input placeholder="all (substring)" /></label>
+          <span class="status">rendering…</span>
+          <span class="bpf-note" title="policy program only">ⓘ policy program only</span>
+        </div>
+        <div class="origin-legend">
+          <span class="origin-key origin-policy"><span class="origin-swatch"></span>policy</span>
+          <span class="origin-key origin-endpoint"><span class="origin-swatch"></span>endpoint</span>
+        </div>
+        <div class="bpf-programs">
+          <div class="bpf-prog">
+            <button class="bpf-prog-head">
+              <span class="bpf-tri">▾</span>
+              <code>default/web</code>
+              <span class="bpf-dir bpf-dir-ingress">ingress</span>
+              <span class="bpf-fam">IPv4</span>
+              <span class="muted bpf-meta">42 insns · 2 sub-progs</span>
+            </button>
+            <pre class="bpf-asm"><div class="asm-line origin-endpoint">  ; Start of program</div><div class="asm-line origin-endpoint">  r6 = r1</div><div class="asm-line origin-policy">  ; Start of tier default</div><div class="asm-line origin-policy">  r1 = 0</div><div class="asm-line origin-policy">  if r1 == 0x0 goto +3</div><div class="asm-line origin-profile">  ; Start of rule profile</div><div class="asm-line origin-profile">  r2 = 1</div><div class="asm-line origin-endpoint">allow:</div><div class="asm-line origin-static">  ; static footer</div></pre>
+          </div>
+          <div class="bpf-prog">
+            <button class="bpf-prog-head">
+              <span class="bpf-tri">▸</span>
+              <code>default/api</code>
+              <span class="bpf-dir bpf-dir-egress">egress</span>
+              <span class="bpf-fam">IPv4</span>
+              <span class="muted bpf-meta">18 insns · error</span>
+            </button>
+          </div>
+          <div class="bpf-prog">
+            <button class="bpf-prog-head">
+              <span class="bpf-tri">▾</span>
+              <code>default/broken</code>
+              <span class="bpf-dir bpf-dir-egress">egress</span>
+              <span class="bpf-fam">IPv4</span>
+              <span class="muted bpf-meta">· error</span>
+            </button>
+            <pre class="bpf-asm error">polprog: failed to assemble program: unknown selector</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== IPTABLES VIEW ====================== -->
+  <section class="ks-section">
+    <h2>iptables / nftables view</h2>
+    <div class="ks-frame ks-tall">
+      <div class="bpf-view">
+        <div class="bpf-controls">
+          <label>ip <select><option>auto</option></select></label>
+          <label><input type="checkbox" /> static chains</label>
+          <span class="status"></span>
+          <span class="bpf-note" title="dataplane render">ⓘ dataplane render</span>
+        </div>
+        <div class="origin-legend">
+          <span class="origin-key origin-policy"><span class="origin-swatch"></span>policy</span>
+          <span class="origin-key origin-endpoint"><span class="origin-swatch"></span>endpoint</span>
+          <span class="origin-key origin-dispatch"><span class="origin-swatch"></span>dispatch</span>
+        </div>
+        <div class="bpf-programs">
+          <div class="bpf-prog">
+            <button class="bpf-prog-head">
+              <span class="bpf-tri">▾</span>
+              <span class="bpf-dir bpf-dir-iptables">iptables</span>
+              <span class="bpf-fam">IPv4</span>
+              <span class="muted bpf-meta">6 chains</span>
+            </button>
+            <div class="ipt-tables">
+              <div class="ipt-frame">*filter</div>
+              <pre class="bpf-asm ipt-chain origin-endpoint"><div class="ipt-line">:cali-tw-cali123 - [0:0]</div><div class="ipt-line">-A cali-tw-cali123 --jump <span class="origin-ref origin-policy">cali-pi-default</span></div><div class="ipt-line">-A cali-tw-cali123 --jump <span class="origin-ref origin-profile">cali-pri-default</span></div></pre>
+              <pre class="bpf-asm ipt-chain origin-policy"><div class="ipt-line">:cali-pi-default - [0:0]</div><div class="ipt-line">-A cali-pi-default -m set --match-set web src --jump ACCEPT</div></pre>
+              <pre class="bpf-asm ipt-chain origin-dispatch"><div class="ipt-line">:cali-from-wl-dispatch - [0:0]</div><div class="ipt-line">-A cali-from-wl-dispatch --goto <span class="origin-ref origin-endpoint">cali-fw-cali123</span></div></pre>
+              <div class="ipt-frame">COMMIT</div>
+            </div>
+          </div>
+          <div class="bpf-prog">
+            <button class="bpf-prog-head">
+              <span class="bpf-tri">▾</span>
+              <span class="bpf-dir bpf-dir-nftables">nftables</span>
+              <span class="bpf-fam">IPv6</span>
+              <span class="muted bpf-meta">4 chains</span>
+            </button>
+            <div class="ipt-tables">
+              <div class="ipt-frame">*filter</div>
+              <pre class="bpf-asm ipt-chain origin-static"><div class="ipt-line">chain cali-INPUT { type filter hook input priority 0; }</div></pre>
+              <div class="ipt-frame">COMMIT</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Durable home for the SQLite stores (exam-results.db + share-links.db and
+# their -wal/-shm sidecars). ReadWriteOnce: the stores are single-writer, which
+# is why SQLite mode is pinned to replicas: 1. Not needed in PostgreSQL mode
+# (set RESULTS_FILE / SHARE_FILE to postgres:// DSNs and remove the mount).
+# Uses the cluster's default StorageClass.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: peacha-data
+  namespace: peacha
+  labels:
+    app.kubernetes.io/name: peacha
+    app.kubernetes.io/component: editor
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

@@ -1,0 +1,33 @@
+{
+  "name": "peacha-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run gen:crd && tsc -b && vite build",
+    "preview": "vite preview",
+    "gen:crd": "node scripts/gen-policy-schema.ts",
+    "check:crd": "node scripts/check-crd-drift.ts",
+    "crd-sync": "node scripts/check-crd-drift.ts --suggest"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.6.0",
+    "@xyflow/react": "^12.4.4",
+    "elkjs": "^0.9.3",
+    "monaco-editor": "^0.52.2",
+    "monaco-yaml": "^5.5.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3"
+  }
+}

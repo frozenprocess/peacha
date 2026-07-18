@@ -1,0 +1,42 @@
+# Lesson 65 - the carve-out a cluster-wide default-deny ALWAYS needs: DNS.
+#
+# When egress is default-denied, pods can't reach CoreDNS, so every hostname
+# lookup fails and the app looks mysteriously broken - connections to a name
+# never even get as far as the network policy for the real destination. DNS is
+# the one egress essentially every workload needs.
+#
+# Two design choices:
+#
+#   1. namespaceSelector EXCLUDES the system namespaces
+#      (kubernetes.io/metadata.name not in {calico-system, kube-system,
+#      kube-public, tigera-operator}). We must not default-deny CoreDNS itself,
+#      or we'd break the very thing we're allowing access to. So the lockdown
+#      applies to workloads, not the system plane.
+#
+#   2. CoreDNS answers on BOTH UDP/53 (the common case) and TCP/53 (large
+#      responses, zone transfers), so we allow both protocols. It is selected by
+#      its well-known label k8s-app == "kube-dns".
+#
+# This is the minimal, universally-needed egress carve-out - pair it with the
+# default-deny from lesson 60 and your pods can resolve names again while
+# everything else stays denied.
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: allow-dns-egress
+spec:
+  order: 900
+  namespaceSelector: kubernetes.io/metadata.name not in {"calico-system", "kube-system", "kube-public", "tigera-operator"}
+  types:
+    - Egress
+  egress:
+    - action: Allow
+      protocol: UDP
+      destination:
+        selector: k8s-app == "kube-dns"
+        ports: [53]
+    - action: Allow
+      protocol: TCP
+      destination:
+        selector: k8s-app == "kube-dns"
+        ports: [53]

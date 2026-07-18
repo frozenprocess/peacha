@@ -1,0 +1,9 @@
+{
+  "name": "getting-started",
+  "flavor": "calico",
+  "title": "Getting to know Peacha",
+  "track": "Playground",
+  "playground": true,
+  "order": 5,
+  "summary": "What Peacha is, how the editor works, and the building blocks - namespaces, tiers, probes, and resources."
+}

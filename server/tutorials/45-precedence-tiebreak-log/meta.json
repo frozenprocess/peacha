@@ -1,0 +1,8 @@
+{
+  "name": "ptee-precedence-tiebreak-log",
+  "flavor": "calico",
+  "title": "Precedence deep-dive: ties and the Log action",
+  "track": "Policy types, end to end",
+  "order": 45,
+  "summary": "When two Calico policies share an order - or have none at all - the tie is broken by policy NAME, alphabetically. And the Log action is non-terminal: it logs and falls through, so whatever rule follows it is the real decider. Two precedence subtleties that decide flows you thought you'd settled."
+}

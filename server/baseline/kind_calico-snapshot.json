@@ -1,0 +1,175 @@
+{
+  "_meta": {
+    "plugin": "calico",
+    "context": "<current>",
+    "generated_at": "2026-06-01T05:26:04Z",
+    "regenerate_with": "python3 snapshot-cni.py --plugin calico > workloads/calico-snapshot.json"
+  },
+  "namespaces": [
+    {
+      "name": "calico-system",
+      "labels": {
+        "app.kubernetes.io/component": "Installation.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "calico-system",
+        "app.kubernetes.io/part-of": "Calico",
+        "k8s-app": "calico-system",
+        "kubernetes.io/metadata.name": "calico-system",
+        "name": "calico-system",
+        "pod-security.kubernetes.io/enforce": "privileged",
+        "pod-security.kubernetes.io/enforce-version": "latest"
+      }
+    },
+    {
+      "name": "tigera-operator",
+      "labels": {
+        "kubernetes.io/metadata.name": "tigera-operator",
+        "name": "tigera-operator",
+        "pod-security.kubernetes.io/enforce": "privileged"
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "name": "policy-llm-control-plane",
+      "ip": "172.18.0.2",
+      "interfaceName": "eth0",
+      "labels": {
+        "beta.kubernetes.io/arch": "amd64",
+        "beta.kubernetes.io/os": "linux",
+        "kubernetes.io/arch": "amd64",
+        "kubernetes.io/hostname": "policy-llm-control-plane",
+        "kubernetes.io/os": "linux",
+        "node-role.kubernetes.io/control-plane": "",
+        "node.kubernetes.io/exclude-from-external-load-balancers": ""
+      }
+    },
+    {
+      "name": "policy-llm-worker",
+      "ip": "172.18.0.3",
+      "interfaceName": "eth0",
+      "labels": {
+        "beta.kubernetes.io/arch": "amd64",
+        "beta.kubernetes.io/os": "linux",
+        "kubernetes.io/arch": "amd64",
+        "kubernetes.io/hostname": "policy-llm-worker",
+        "kubernetes.io/os": "linux"
+      }
+    }
+  ],
+  "endpoints": [
+    {
+      "id": "calico-system/calico-apiserver",
+      "namespace": "calico-system",
+      "app": "calico-apiserver",
+      "pod": "calico-apiserver-6fd45965d4-fjnt8",
+      "ip": "192.168.248.200",
+      "labels": {
+        "apiserver": "true",
+        "app.kubernetes.io/component": "APIServer.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "calico-apiserver",
+        "app.kubernetes.io/part-of": "Calico",
+        "k8s-app": "calico-apiserver",
+        "pod-template-hash": "6fd45965d4"
+      },
+      "node": "policy-llm-control-plane"
+    },
+    {
+      "id": "calico-system/calico-kube-controllers",
+      "namespace": "calico-system",
+      "app": "calico-kube-controllers",
+      "pod": "calico-kube-controllers-5745788579-f8skr",
+      "ip": "192.168.248.201",
+      "labels": {
+        "app.kubernetes.io/component": "Installation.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "calico-kube-controllers",
+        "app.kubernetes.io/part-of": "Calico",
+        "k8s-app": "calico-kube-controllers",
+        "pod-template-hash": "5745788579"
+      },
+      "node": "policy-llm-control-plane"
+    },
+    {
+      "id": "calico-system/calico-node",
+      "namespace": "calico-system",
+      "app": "calico-node",
+      "pod": "calico-node-6f5s4",
+      "ip": "172.18.0.2",
+      "labels": {
+        "app.kubernetes.io/component": "Installation.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "calico-node",
+        "app.kubernetes.io/part-of": "Calico",
+        "controller-revision-hash": "6d8f5ccf5",
+        "k8s-app": "calico-node",
+        "pod-template-generation": "1"
+      },
+      "node": "policy-llm-control-plane",
+      "host_network": true
+    },
+    {
+      "id": "calico-system/calico-typha",
+      "namespace": "calico-system",
+      "app": "calico-typha",
+      "pod": "calico-typha-5b9c9fcd7f-clsjm",
+      "ip": "172.18.0.3",
+      "labels": {
+        "app.kubernetes.io/component": "Installation.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "calico-typha",
+        "app.kubernetes.io/part-of": "Calico",
+        "k8s-app": "calico-typha",
+        "pod-template-hash": "5b9c9fcd7f"
+      },
+      "node": "policy-llm-worker",
+      "host_network": true,
+      "ports": [
+        {
+          "name": "calico-typha",
+          "port": 5473,
+          "protocol": "TCP"
+        }
+      ]
+    },
+    {
+      "id": "calico-system/csi-node-driver",
+      "namespace": "calico-system",
+      "app": "csi-node-driver",
+      "pod": "csi-node-driver-99dhb",
+      "ip": "192.168.54.66",
+      "labels": {
+        "app.kubernetes.io/component": "Installation.operator.tigera.io",
+        "app.kubernetes.io/instance": "default",
+        "app.kubernetes.io/managed-by": "tigera-operator",
+        "app.kubernetes.io/name": "csi-node-driver",
+        "app.kubernetes.io/part-of": "Calico",
+        "controller-revision-hash": "6cc8bdd595",
+        "k8s-app": "csi-node-driver",
+        "name": "csi-node-driver",
+        "pod-template-generation": "1"
+      },
+      "node": "policy-llm-worker"
+    },
+    {
+      "id": "tigera-operator/tigera-operator",
+      "namespace": "tigera-operator",
+      "app": "tigera-operator",
+      "pod": "tigera-operator-665f4f4489-nvhvz",
+      "ip": "172.18.0.3",
+      "labels": {
+        "k8s-app": "tigera-operator",
+        "name": "tigera-operator",
+        "pod-template-hash": "665f4f4489"
+      },
+      "node": "policy-llm-worker",
+      "host_network": true
+    }
+  ]
+}

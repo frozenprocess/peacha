@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: peacha-editor
+  namespace: peacha
+  labels:
+    app.kubernetes.io/name: peacha
+    app.kubernetes.io/component: editor
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: peacha
+    app.kubernetes.io/component: editor
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

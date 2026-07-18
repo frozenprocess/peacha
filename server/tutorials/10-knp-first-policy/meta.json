@@ -1,0 +1,8 @@
+{
+  "name": "ptee-knp-first-policy",
+  "flavor": "calico",
+  "title": "Your first policy: Kubernetes NetworkPolicy",
+  "track": "Kubernetes Network Policy",
+  "order": 10,
+  "summary": "Start where almost every cluster already is - the upstream networking.k8s.io NetworkPolicy. Add one policy in prod and watch a single pod flip from open to default-deny, accepting only the one source you named."
+}

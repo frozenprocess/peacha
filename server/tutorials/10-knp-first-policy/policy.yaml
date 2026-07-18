@@ -1,0 +1,38 @@
+# Lesson 10 - the upstream Kubernetes NetworkPolicy (networking.k8s.io/v1),
+# the policy API most clusters already run. Everything else in this track
+# builds on the mental model this one establishes.
+#
+# Two facts to take away:
+#
+#   1. A KNP is NAMESPACED and selects pods with `spec.podSelector`. Here it
+#      governs only prod/backend (app == backend in namespace prod). Pods the
+#      selector does not match - frontend, database, anything in dev - are left
+#      completely untouched.
+#
+#   2. The moment a KNP with `policyTypes: [Ingress]` selects a pod, that pod
+#      flips to ingress default-deny: it now refuses every inbound connection
+#      EXCEPT the ones an `ingress` rule explicitly admits. Here the one
+#      admitted source is prod/frontend on TCP 8080.
+#
+# So adding this single object turns prod/backend from "anyone may connect" into
+# "only prod/frontend on 8080" - without writing a single Deny rule. That
+# implicit flip is the whole idea of network policy.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-allow-frontend
+  namespace: prod
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 8080

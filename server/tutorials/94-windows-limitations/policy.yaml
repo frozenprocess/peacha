@@ -1,0 +1,30 @@
+# Lesson 94 - a Deny that HNS silently drops (a security hole).
+#
+# The rule: frontend may egress ONLY to backend. It's expressed as a Deny to
+# everything that is NOT the backend, using a NEGATED match (notSelector). On
+# LINUX this denies frontend -> database. On WINDOWS the HNS renderer cannot
+# express a negated match, so it DROPS the whole Deny rule - and with the rule
+# gone, frontend -> database is ALLOWED. Same YAML, opposite verdict, and the
+# Windows side is the more permissive one: a hole.
+#
+# This is render-provable: open the Windows (HNS) tab, filter to frontend, look
+# at egress - the Deny rule is simply absent. The matrix (Linux engine) still
+# shows it denied. That gap is the lesson.
+#
+# order 100 so it sits above the namespace profile's default allow, giving the
+# Deny something to actually decide.
+---
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: frontend-egress-lockdown
+spec:
+  order: 100
+  selector: 'app == "frontend"'
+  types: [Egress]
+  egress:
+    # Deny egress to anything that is NOT the backend. The notSelector is the
+    # negated match HNS can't render -> the whole rule is dropped on Windows.
+    - action: Deny
+      destination:
+        notSelector: 'app == "backend"'

@@ -1,0 +1,9 @@
+<svg width="118" height="24" viewBox="0 0 118 24" xmlns="http://www.w3.org/2000/svg">
+  <g fill="#1f1f1f">
+    <rect x="1" y="3" width="8" height="8" rx="0.5"/>
+    <rect x="11" y="3" width="8" height="8" rx="0.5"/>
+    <rect x="1" y="13" width="8" height="8" rx="0.5"/>
+    <rect x="11" y="13" width="8" height="8" rx="0.5"/>
+    <text x="26" y="18" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="17" font-weight="700">Windows</text>
+  </g>
+</svg>

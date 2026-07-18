@@ -1,0 +1,55 @@
+# Lesson 40 - the namespaced Calico NetworkPolicy (projectcalico.org/v3, kind
+# NetworkPolicy). Same scope as the KNP from lesson 10 (it lives in one
+# namespace and selects pods there), but it adds the two things lesson 20 said
+# KNP can't do:
+#
+#   1. An explicit `Deny` ACTION - say "this source may never connect," not just
+#      "these sources may."
+#   2. A `spec.order` - rank policies; LOWER order is evaluated first.
+#
+# The interop fact that ties it to earlier lessons: Calico has to rank Kubernetes
+# NetworkPolicies against its own, and a KNP carries no order field - so Calico
+# assigns every KNP a fixed order of 1000. Give a Calico policy order < 1000 and
+# it is consulted BEFORE any KNP; give it > 1000 and it's consulted after.
+#
+# Bundle:
+#   1. Calico NetworkPolicy (order 100): a targeted Deny - prod/database may not
+#      reach prod/backend. No catch-all, so non-database sources fall through.
+#   2. Kubernetes NetworkPolicy (effective order 1000): prod/backend admits
+#      prod/frontend.
+#
+# A flow from prod/database matches the order-100 Deny first -> dropped, the KNP
+# never sees it. A flow from prod/frontend misses the Deny, falls through to the
+# KNP at 1000 -> allowed.
+---
+apiVersion: projectcalico.org/v3
+kind: NetworkPolicy
+metadata:
+  name: backend-deny-from-database
+  namespace: prod
+spec:
+  order: 100
+  selector: app == 'backend'
+  types:
+    - Ingress
+  ingress:
+    - action: Deny
+      source:
+        selector: app == 'database'
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-allow-frontend
+  namespace: prod
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend

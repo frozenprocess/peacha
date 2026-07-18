@@ -1,0 +1,8 @@
+{
+  "name": "ptee-dns-egress",
+  "flavor": "calico",
+  "title": "Don't forget DNS: the one egress every pod needs",
+  "track": "Policy types, end to end",
+  "order": 65,
+  "summary": "A cluster-wide default-deny silently breaks name resolution, and an app that can't resolve a hostname looks 'randomly broken'. Carve out egress to CoreDNS on port 53 (UDP and TCP) for every workload, while leaving the system namespaces - including CoreDNS itself - out of the lockdown."
+}

@@ -1,0 +1,2761 @@
+/* Peacha UI - hand-rolled (no Tailwind / CSS-in-JS) so the bundle stays small.
+   The whole theme is driven by the design tokens in the :root blocks below,
+   so retheming / dark mode is a matter of editing variables, not hunting
+   literals. Light is the default; `data-theme="dark"` on <html> flips it.
+   Palette + type follow the "Peacha" Material-3 design system (warm
+   peach/cream surfaces, Hanken Grotesk + JetBrains Mono). */
+
+:root {
+  color-scheme: light;
+
+  /* type */
+  --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* type scale - single source of truth for readable sizing. Bumped from the
+     original cramped 8–13px range toward a more legible floor (inspired by, but
+     not copying, Vuexy's 15px/1.375 base). The DOM chrome below now leans on
+     these; graph-node internals (PodNode/PolicyCard/etc.) keep their own px
+     sizes because ELK reserves pixel-exact bands for them - see useElkLayout. */
+  --text-2xs: 11px; /* floor: micro tags/badges only */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-base: 15px; /* body */
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --leading: 1.5;       /* comfortable body/prose leading */
+  --leading-tight: 1.25; /* dense rows, fixed-height boxes */
+
+  /* shape */
+  --radius-sm: 0.25rem;
+  --radius: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-pill: 999px;
+
+  /* surfaces (M3 tonal layers - warm cream) */
+  --surface: #fef8f3;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f8f3ee;
+  --surface-container: #f3ede8;
+  --surface-container-high: #ede7e2;
+  --surface-container-highest: #e7e1dd;
+  --surface-dim: #ded9d4;
+
+  /* text */
+  --on-surface: #1d1b19;
+  --on-surface-variant: #5f4d40;
+  --on-surface-muted: #897668;
+
+  /* lines */
+  --outline: #867468;
+  --border: #d8c2b5;
+  --border-subtle: #ece2d9;
+
+  /* brand / primary */
+  --primary: #8e4e14;
+  --on-primary: #ffffff;
+  --primary-container: #f4a261;
+  --on-primary-container: #6f3800;
+  --primary-hover: #a85d1c;
+
+  /* secondary (gold) - used for lint warnings */
+  --secondary: #765a05;
+  --secondary-container: #ffd87c;
+
+  /* tertiary (teal/green) - positive / "allow" accents */
+  --tertiary: #006a60;
+
+  /* status: errors */
+  --error: #ba1a1a;
+  --error-border: #f4baba;
+  --error-container: #ffeaea;
+  --on-error-container: #8c1111;
+
+  /* status: lint warnings */
+  --warning-fg: #6b5300;
+  --warning-bg: #fff8e6;
+  --warning-border: #ecd9a0;
+
+  /* connectivity verdicts (matrix) */
+  --allow-fg: #137333;
+  --allow-bg: #e3f3e9;
+  --deny-fg: #a50e0e;
+  --deny-bg: #fbe4e3;
+  --self-fg: #b3a89e;
+  --self-bg: #f3ede8;
+  --sel-bg: #ffe7d6;
+
+  /* direction badges (bpf / iptables headers) */
+  --badge-ingress-fg: #1c4e80;  --badge-ingress-bg: #e3f0ff;
+  --badge-egress-fg: #8a4b1c;   --badge-egress-bg: #ffefe0;
+  --badge-iptables-fg: #2a4d6e; --badge-iptables-bg: #e8eef5;
+  --badge-nftables-fg: #2a6e2f; --badge-nftables-bg: #e9f3e9;
+
+  /* code surfaces (policy editor + bpf/iptables disassembly) - follow the
+     theme: a light paper surface in light mode, editor-dark in dark mode. */
+  --code-bg: #fbf7f3;
+  --code-border: var(--border-subtle);
+  --code-text: var(--on-surface);
+  --code-frame: var(--on-surface-muted);
+
+  /* depth + effects */
+  --ring: rgba(142, 78, 20, 0.22);
+  --shadow-sm: 0 1px 3px rgba(142, 78, 20, 0.10);
+  --shadow-md: 0 8px 28px rgba(142, 78, 20, 0.16);
+  --glass-bg: rgba(255, 251, 247, 0.82);
+  --ns-group-bg: rgba(142, 78, 20, 0.05);
+  --ns-group-bg-system: rgba(0, 0, 0, 0.03);
+
+  /* origin accents (data colors; identical in both themes) */
+  --oc-policy: #2563eb;
+  --oc-profile: #0d9488;
+  --oc-endpoint: #d97706;
+  --oc-dispatch: #7c3aed;
+  --oc-static: #9ca3af;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface: #1a1512;
+  --surface-container-lowest: #120e0b;
+  --surface-container-low: #221b16;
+  --surface-container: #271f1a;
+  --surface-container-high: #322a24;
+  --surface-container-highest: #3d342e;
+  --surface-dim: #15110e;
+
+  --on-surface: #efe0d6;
+  --on-surface-variant: #d6c2b4;
+  --on-surface-muted: #a89684;
+
+  --outline: #9f8d80;
+  --border: #50443b;
+  --border-subtle: #352c26;
+
+  --primary: #ffb780;
+  --on-primary: #4e2600;
+  --primary-container: #6f3800;
+  --on-primary-container: #ffdcc4;
+  --primary-hover: #ffc99c;
+
+  --secondary: #e7c268;
+  --secondary-container: #5a4400;
+
+  --tertiary: #6fd8c8;
+
+  --error: #ffb4ab;
+  --error-border: #93000a;
+  --error-container: #3a0907;
+  --on-error-container: #ffb4ab;
+
+  --warning-fg: #e7c268;
+  --warning-bg: rgba(231, 194, 104, 0.10);
+  --warning-border: #5a4400;
+
+  --allow-fg: #81da8d;
+  --allow-bg: rgba(129, 218, 141, 0.14);
+  --deny-fg: #ffb4ab;
+  --deny-bg: rgba(255, 180, 171, 0.13);
+  --self-fg: #6d6259;
+  --self-bg: #271f1a;
+  --sel-bg: rgba(255, 183, 128, 0.16);
+
+  --badge-ingress-fg: #9bc4ff;  --badge-ingress-bg: rgba(37, 99, 235, 0.20);
+  --badge-egress-fg: #f3b483;   --badge-egress-bg: rgba(217, 119, 6, 0.20);
+  --badge-iptables-fg: #9bbbe0; --badge-iptables-bg: rgba(42, 77, 110, 0.34);
+  --badge-nftables-fg: #8fd49a; --badge-nftables-bg: rgba(20, 115, 51, 0.24);
+
+  --code-bg: #1e1e1e;
+  --code-border: #2d2d2d;
+  --code-text: #d4d4d4;
+  --code-frame: #8a8a8a;
+
+  --ring: rgba(255, 183, 128, 0.28);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.6);
+  --glass-bg: rgba(39, 31, 26, 0.82);
+  --ns-group-bg: rgba(255, 183, 128, 0.06);
+  --ns-group-bg-system: rgba(255, 255, 255, 0.03);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading);
+  color: var(--on-surface);
+  background: var(--surface);
+}
+
+button {
+  font: inherit;
+  padding: 0.34rem 0.7rem;
+  color: var(--on-surface);
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+button:hover { background: var(--surface-container); }
+button.link {
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  padding: 0 0.25rem;
+  text-decoration: underline;
+}
+button.link:hover { color: var(--primary-hover); background: transparent; }
+
+input, select, textarea {
+  font: inherit;
+  color: var(--on-surface);
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-container-lowest);
+}
+input:focus, select:focus, textarea:focus {
+  outline: 0;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+code { font-family: var(--font-mono); }
+.muted { color: var(--on-surface-muted); }
+
+/* -------- layout shell -------- */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;   /* fallback for browsers without dynamic viewport units */
+  height: 100dvh;  /* tracks the visible viewport as mobile browser chrome shows/hides */
+  min-height: 0;
+}
+
+/* The resizable workspace below the toolbar: two full-height columns side by
+   side, with a draggable vertical seam between them. The LEFT column stacks
+   docs over topology; the RIGHT column stacks policy over the view pane - each
+   column has its own horizontal seam. Sizes are driven by inline flex styles
+   from App's layout state. */
+.layout {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--border); /* shows through the 1px seams between panes */
+}
+.layout-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.layout .maximized {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+/* Drag handles. splitter-col is a vertical bar dragged left/right (resizes the
+   left|right column split); splitter-row is a horizontal bar dragged up/down
+   (resizes a column's top|bottom split). Double-click resets to the default. */
+.splitter {
+  flex: 0 0 auto;
+  background: var(--border);
+  transition: background 0.1s;
+}
+.splitter:hover { background: var(--primary); }
+.splitter-col { width: 5px; cursor: col-resize; }
+.splitter-row { height: 5px; cursor: row-resize; }
+
+/* Floating per-pane controls (collapse / maximize / restore), top-right of
+   each pane. Overlaid so they don't disturb each pane's own header. */
+.pane-ctl {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  z-index: 15;
+  display: flex;
+  gap: 4px;
+}
+.pane-ctl button {
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7rem;
+  min-height: 1.7rem;
+  padding: 0.2rem 0.4rem;
+  color: var(--on-surface-muted);
+  background: var(--glass-bg);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+.pane-ctl button:hover { color: var(--primary); border-color: var(--border); background: var(--surface-container-lowest); }
+
+/* Collapsed pane: a thin horizontal bar (with an expand button + label) that
+   spans its column's width, so the pane is recoverable without taking real
+   estate. Used for any of the four panes when collapsed. */
+.pane-bar {
+  flex: 0 0 auto;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  background: var(--surface-container-low);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-muted);
+}
+.strip-btn { font-size: 14px; padding: 0 0.3rem; }
+
+/* App header - three zones: brand (left), grouped action clusters separated by
+   thin dividers (middle), and a right-aligned utility cluster (status + theme).
+   Inspired by Metronic demo6's grouped, evenly-spaced top bar. */
+.toolbar {
+  /* sticky pins the bar to the top so it can't scroll out of view on mobile;
+     it also anchors the .tb-actions overflow dropdown in compact modes. z-index
+     keeps the bar (and its dropdown) above the .tb-menu-backdrop (z-index 55). */
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 3.25rem;
+  padding: 0 0.85rem;
+  background: var(--surface-container-lowest);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+/* The middle action clusters. On desktop a plain inline flex row sitting between
+   the brand and the right-aligned utilities; below 1024px (see media query) it
+   collapses into a dropdown panel toggled by .tb-overflow. */
+.tb-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+/* Overflow trigger - only shown in compact modes. Styled like the other glassy
+   icon buttons (theme/github). */
+.tb-overflow { display: none; }
+
+.tb-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-right: 0.35rem;
+}
+.toolbar-logo {
+  height: 2rem;
+  width: auto;
+  display: block;
+}
+.tb-wordmark {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--primary);
+}
+
+/* A cluster of related actions; items inside sit tight together. */
+.tb-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+/* Thin vertical rule between clusters. */
+.tb-divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 0.6rem 0.15rem;
+  background: var(--border-subtle);
+}
+
+/* Toolbar buttons read as quiet "ghost" controls until hovered, so the bar
+   stays calm and the brand/status carry the colour. */
+.toolbar button {
+  font-size: 14px;
+  padding: 0.3rem 0.6rem;
+  background: transparent;
+  border-color: transparent;
+  color: var(--on-surface-variant);
+}
+.toolbar button:hover:not(:disabled) {
+  background: var(--surface-container);
+  border-color: var(--border-subtle);
+  color: var(--on-surface);
+}
+.toolbar button:disabled { opacity: 0.45; cursor: default; }
+
+.toolbar .provider-select {
+  font-size: 13px;
+  padding: 0.25rem 0.4rem;
+  text-transform: lowercase;
+}
+.toolbar .baseline-info {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  background: var(--surface-container);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  padding: 0.15rem 0.55rem;
+  white-space: nowrap;
+}
+
+/* Right-aligned utility cluster - pushed to the far edge. */
+.tb-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.toolbar .status {
+  font-size: 14px;
+  color: var(--on-surface-muted);
+  white-space: nowrap;
+}
+.toolbar .status.error {
+  color: var(--on-primary);
+  background: var(--error);
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* Day/night toggle + the GitHub link - square, glassy icon buttons styled to
+   match the per-pane collapse/maximize controls (.pane-ctl button) rather than
+   a text verb. */
+.toolbar button.theme-toggle,
+.toolbar a.nav-icon {
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7rem;
+  min-height: 1.7rem;
+  padding: 0.2rem 0.4rem;
+  color: var(--on-surface-muted);
+  background: var(--glass-bg);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+.toolbar button.theme-toggle:hover,
+.toolbar a.nav-icon:hover {
+  color: var(--primary);
+  border-color: var(--border);
+  background: var(--surface-container-lowest);
+}
+.toolbar a.nav-icon svg { display: block; }
+
+.pane {
+  position: relative;
+  background: var(--surface-container-lowest);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  min-width: 0;
+}
+.pane > h2 {
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-variant);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-container-low);
+}
+
+.pane-action {
+  font-size: 13px;
+  padding: 0.15rem 0.5rem;
+  margin-left: 0.25rem;
+}
+/* Pushed to the far (right) edge of the pane-head, just inside the space the
+   absolute .pane-ctl cluster reserves via the head's padding-right. */
+.pane-action-end { margin-left: auto; }
+
+/* In-head icon button - mirrors the .pane-ctl collapse/maximize controls so the
+   download glyph reads as one of the same family of square, glassy buttons. */
+.pane-icon-btn {
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7rem;
+  min-height: 1.7rem;
+  padding: 0.2rem 0.4rem;
+  color: var(--on-surface-muted);
+  background: var(--glass-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+.pane-icon-btn:hover:not(:disabled) {
+  color: var(--primary);
+  border-color: var(--border);
+  background: var(--surface-container-lowest);
+}
+.pane-icon-btn:disabled { opacity: 0.45; cursor: default; }
+
+/* Shared header bar for all four panes (docs / topology / policy / view). One
+   parent style so every pane header is the same height - sized to match the
+   tallest case, the view pane's tab row. Whether a header holds a bare <h2>
+   title or a row of tab buttons, min-height keeps the bars aligned and the
+   buttons vertically centred. Right padding reserves room for the floating
+   .pane-ctl (collapse / maximize) cluster in the top-right corner. */
+.pane-head {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 2.5rem;
+  padding: 0.3rem 0.75rem;
+  padding-right: 4.4rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-container-low);
+  flex-shrink: 0;
+}
+.pane-head > h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+}
+
+/* read-along tutorial track */
+.tutorial-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+/* Pin the top nav so the prev/next buttons and the lesson picker stay reachable
+   while reading - the learner never has to scroll back up to switch lessons.
+   The negative margins span the .docs-scroll top/side padding so it covers the
+   scrolling lesson edge-to-edge (nothing peeks above or beside it); the border
+   separates it from the text passing underneath. z-index sits above the lesson
+   but is independent of the bottom-pinned feedback footer. */
+.tutorial-nav-top {
+  position: sticky;
+  /* top:-0.5rem (not 0) cancels the .docs-scroll top padding so the bar pins
+     flush to the very top edge of the scroll area, with no background sliver
+     peeking above it; the matching padding-top keeps the buttons clear of it. */
+  top: -0.5rem;
+  z-index: 2;
+  margin: -0.5rem -0.75rem 0.4rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-container-lowest);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.tutorial-select {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--surface-container-lowest);
+  color: var(--on-surface);
+}
+.tutorial-step {
+  font-size: 13px;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--surface-container-lowest);
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+.tutorial-step:hover:not(:disabled) {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.tutorial-step:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.tutorial-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+.tutorial-track {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius);
+  background: var(--surface-container);
+}
+.tutorial-count { margin-left: auto; }
+
+/* -------- read-along feedback widget (opted-in tutorial pages) --------
+   Pinned as a footer bar: position:sticky + bottom:0 keeps it at the bottom
+   edge of the .docs-scroll viewport while the reader is anywhere in the lesson,
+   so the prompt is always in view instead of buried below the fold. It is the
+   LAST element in the scroll region (rendered after the bottom nav) so it has
+   nothing below it to cover - it settles flush at the very end rather than
+   floating over and masking the nav. The negative margins span the .docs-scroll
+   side/bottom padding so it reads edge-to-edge; the border + shadow lift it off
+   the lesson text it floats over. */
+.tutorial-feedback {
+  position: sticky;
+  /* bottom:-0.75rem (not 0) cancels the .docs-scroll bottom padding so the
+     footer pins flush to the very bottom edge, with no background sliver below
+     it; the -0.75rem bottom margin keeps it flush once it settles at the end. */
+  bottom: -0.75rem;
+  z-index: 1;
+  margin: 1.5rem -0.75rem -0.75rem;
+  padding: 0.7rem 0.75rem;
+  background: var(--surface-container-lowest);
+  border-top: 1px solid var(--border-subtle);
+  box-shadow: 0 -4px 14px -8px rgba(0, 0, 0, 0.35);
+}
+.tutorial-feedback-done {
+  color: var(--on-surface-variant);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.tutorial-feedback-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.tutorial-feedback-rate { display: flex; gap: 0.4rem; margin-left: auto; }
+.fb-rate {
+  font-size: 16px;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  background: var(--surface-container-lowest);
+  cursor: pointer;
+  opacity: 0.7;
+}
+.fb-rate:hover { opacity: 1; }
+.fb-rate.active {
+  opacity: 1;
+  border-color: var(--primary);
+  background: var(--surface-container-high);
+}
+.tutorial-feedback-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+.tutorial-feedback-comment,
+.tutorial-feedback-attrib input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--on-surface);
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.5rem;
+}
+.tutorial-feedback-comment { resize: vertical; }
+.tutorial-feedback-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+  color: var(--on-surface-variant);
+  line-height: 1.4;
+}
+.tutorial-feedback-attrib { display: flex; gap: 0.5rem; }
+.tutorial-feedback-attrib input { flex: 1; }
+.tutorial-feedback-error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--error);
+}
+.tutorial-feedback-send {
+  align-self: flex-start;
+  font: inherit;
+  font-weight: 600;
+  color: var(--on-primary);
+  background: var(--primary);
+  border: 0;
+  border-radius: var(--radius);
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+}
+.tutorial-feedback-send:hover { background: var(--primary-hover); }
+.tutorial-feedback-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Inline knowledge-check quiz (```quiz fence -> QuizBlock). Sits between prose
+   sections in a lesson; graded in-browser, so no network state to reflect. */
+.quiz {
+  margin: 1.25rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.quiz-question {
+  padding: 0.85rem 1rem;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+.quiz-prompt {
+  margin: 0 0 0.6rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--on-surface);
+}
+.quiz-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.quiz-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.4rem 0.55rem;
+  font-size: var(--text-sm);
+  color: var(--on-surface);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.quiz-option:hover { background: var(--surface-container-high); }
+.quiz-option input { margin-top: 0.15rem; }
+.quiz-option input:disabled { cursor: default; }
+.quiz-opt-correct {
+  border-color: var(--success, #2e7d32);
+  background: color-mix(in srgb, var(--success, #2e7d32) 12%, transparent);
+}
+.quiz-opt-wrong {
+  border-color: var(--error);
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+}
+.quiz-check,
+.quiz-retry {
+  font: inherit;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--on-primary);
+  background: var(--primary);
+  border: 0;
+  border-radius: var(--radius);
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+}
+.quiz-check { margin-top: 0.7rem; }
+.quiz-check:hover,
+.quiz-retry:hover { background: var(--primary-hover); }
+.quiz-check:disabled { opacity: 0.5; cursor: not-allowed; }
+.quiz-result {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.7rem;
+  font-size: var(--text-sm);
+}
+.quiz-verdict { font-weight: 700; }
+.quiz-correct .quiz-verdict { color: var(--success, #2e7d32); }
+.quiz-wrong .quiz-verdict { color: var(--error); }
+.quiz-explain { color: var(--on-surface-variant); }
+.quiz-retry {
+  margin-left: auto;
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--outline);
+  padding: 0.25rem 0.6rem;
+}
+.quiz-retry:hover { background: var(--surface-container-high); }
+.quiz-error {
+  border: 1px solid var(--error);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.75rem;
+  font-size: var(--text-sm);
+}
+
+.monaco-host { flex: 1; min-height: 0; background: var(--code-bg); }
+
+/* Raw topology YAML editor: the editor fills the host; a parse error overlays
+   the bottom edge without resizing the editor. */
+.raw-topology { height: 100%; position: relative; display: flex; flex-direction: column; }
+.raw-topology-edit { flex: 1; min-height: 0; }
+.raw-topology-tabs {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--border);
+}
+.raw-topology-tabnote {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--on-surface-muted);
+}
+.raw-topology-err {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--error);
+  background: var(--error-container);
+  border-top: 1px solid var(--error-border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* -------- topology editor -------- */
+
+.topology {
+  flex: 1;
+  overflow: auto;
+  padding: 0.5rem 0.75rem 0.75rem;
+  background: var(--surface-container-lowest);
+}
+
+/* Static help (docs pane) - rendered markdown. Compact, theme-matched.
+   .docs-scroll is the pane's scroll region (mirrors .topology); .docs is the
+   typographic wrapper around the markdown. */
+.docs-scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 0.5rem 0.75rem 0.75rem;
+  background: var(--surface-container-lowest);
+}
+.docs {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--on-surface-variant);
+  max-width: 52rem;
+}
+.docs h1 { font-size: 20px; margin: 0 0 0.5rem; color: var(--on-surface); }
+.docs h2 {
+  font-size: 15px;
+  margin: 1rem 0 0.35rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--on-surface);
+}
+.docs h3 { font-size: 14px; margin: 0.75rem 0 0.25rem; color: var(--on-surface); }
+.docs p { margin: 0.35rem 0; }
+.docs ul, .docs ol { margin: 0.35rem 0; padding-left: 1.25rem; }
+.docs li { margin: 0.15rem 0; }
+.docs code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--surface-container);
+  border-radius: var(--radius-sm);
+  padding: 0.05rem 0.25rem;
+}
+/* fenced code blocks: a real framed block, not the inline pill. Token colors
+   come from Monaco (monaco.editor.colorize) - the .mtk* spans inside follow the
+   active theme set by colorizeCode. A header tab carries the language label and
+   (when the fence opts in) copy/run actions. */
+.docs .code-block-wrap {
+  margin: 0.6rem 0;
+  border: 1px solid var(--code-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.docs .code-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.2rem 0.4rem 0.2rem 0.6rem;
+  background: var(--surface-container);
+  border-bottom: 1px solid var(--code-border);
+}
+.docs .code-block-lang {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--on-surface-muted);
+}
+.docs .code-block-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+.docs .code-block-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 0.1rem 0.45rem;
+  color: var(--on-surface-variant);
+  background: var(--surface-container-high);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.docs .code-block-btn:hover {
+  color: var(--on-surface);
+  border-color: var(--code-frame);
+}
+.docs .code-block-run {
+  color: var(--allow-fg);
+}
+.docs pre.code-block {
+  margin: 0;
+  padding: 0.65rem 0.8rem;
+  background: var(--code-bg);
+  border: 0;
+  border-radius: 0;
+  overflow-x: auto;
+  line-height: 1.5;
+  color: var(--code-text);
+}
+.docs pre.code-block code {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: none;
+  border-radius: 0;
+  padding: 0;
+  white-space: pre;
+}
+.docs blockquote {
+  margin: 0.5rem 0;
+  padding: 0.1rem 0.75rem;
+  border-left: 3px solid var(--primary-container);
+  color: var(--on-surface-muted);
+}
+.docs table {
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  font-size: 13px;
+}
+.docs th, .docs td {
+  border: 1px solid var(--border-subtle);
+  padding: 0.2rem 0.5rem;
+  text-align: left;
+}
+.docs th { background: var(--surface-container); }
+.docs a { color: var(--primary); }
+/* Tier pillar label chips (graph tier view - see graph/nodes/TierPillar.tsx). */
+.tier-name { font-weight: 700; }
+.tier-badge {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.05em 0.45em;
+  border-radius: var(--radius-pill);
+  background: var(--surface-container-high);
+  color: var(--on-surface-muted);
+}
+.tier-meta { font-size: 13px; color: var(--on-surface-muted); margin-left: auto; }
+
+/* -------- view pane -------- */
+
+.view-pane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-container-lowest);
+  min-height: 0;
+  overflow: hidden;
+}
+/* The view pane's matrix / graph / bpf / iptables / nftables switch. The
+   container is the shared .pane-head; these style the tab buttons within. */
+.tab {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-color: transparent;
+  background: transparent;
+  color: var(--on-surface-muted);
+  border-radius: var(--radius);
+}
+.tab.active {
+  color: var(--on-primary);
+  border-color: transparent;
+  background: var(--primary);
+}
+/* eBPF wordmark used in place of the "bpf" tab text. The source SVG's viewBox is
+   cropped to the artwork, so height maps directly to the visible logo. */
+.tab-logo {
+  height: 20px;
+  width: auto;
+  display: block;
+}
+.selected-hint {
+  margin-left: auto;
+  font-size: 14px;
+  color: var(--on-surface-variant);
+}
+.selected-hint code {
+  background: var(--surface-container);
+  padding: 0.05em 0.3em;
+  border-radius: var(--radius-sm);
+}
+.errors {
+  background: var(--error-container);
+  border-bottom: 1px solid var(--error-border);
+  padding: 0.4rem 0.75rem;
+  color: var(--on-error-container);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+.warnings {
+  background: var(--warning-bg);
+  border-bottom: 1px solid var(--warning-border);
+  padding: 0.4rem 0.75rem;
+  color: var(--warning-fg);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  white-space: pre-wrap;
+  max-height: 8rem;
+  overflow: auto;
+}
+/* -------- cost bar (policy-efficiency) -------- */
+/* Sits in the results header strip like .warnings; the score pill is tinted by
+   data-tier (lean/ok/heavy) reusing the allow/warning/deny palette. */
+.costbar {
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-container-lowest);
+  font-size: 13px;
+}
+.costbar > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  list-style: none;
+}
+.costbar > summary::-webkit-details-marker { display: none; }
+.costbar > summary::after { content: '▸'; margin-left: auto; color: var(--muted); }
+.costbar[open] > summary::after { content: '▾'; }
+.cost-score {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+}
+/* Tier tint marks "how heavy" - always the portable Cost, never the
+   dataplane weight (its units aren't comparable). So it lands on the plain
+   .cost-score pill (matrix/graph) or the .cost-anchor (dataplane views). */
+.costbar[data-tier='lean'] .cost-score:not(.cost-weight),
+.costbar[data-tier='lean'] .cost-anchor { color: var(--allow-fg); background: var(--allow-bg); }
+.costbar[data-tier='ok'] .cost-score:not(.cost-weight),
+.costbar[data-tier='ok'] .cost-anchor { color: var(--warning-fg); background: var(--warning-bg); }
+.costbar[data-tier='heavy'] .cost-score:not(.cost-weight),
+.costbar[data-tier='heavy'] .cost-anchor { color: var(--deny-fg); background: var(--deny-bg); }
+/* Lead pill on a dataplane view: the real weight (94 instructions, 54 rules,
+   …). Neutral - it carries its own unit, the tier color sits on the anchor. */
+.cost-weight { color: var(--on-surface); background: var(--surface-container); }
+.cost-anchor {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+}
+.cost-struct { color: var(--muted); font-family: var(--font-mono); }
+.cost-flags { color: var(--warning-fg); }
+.costbar-body {
+  padding: 0 0.75rem 0.5rem;
+  max-height: 12rem;
+  overflow: auto;
+}
+.cost-findings { margin: 0; padding-left: 1.1rem; }
+.cost-findings li { margin: 0.15rem 0; }
+.cost-findings code { font-size: 12px; }
+.cost-penalty { color: var(--deny-fg); font-family: var(--font-mono); margin-left: 0.4rem; }
+.cost-clean { color: var(--muted); padding: 0.2rem 0; }
+.cost-dataplane {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.view-body { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+
+/* -------- capabilities drawer -------- */
+
+/* Generic centered modal over a dimmed, blurred backdrop. The backdrop is a
+   scroll container (align-items: flex-start + overflow) so a modal taller than
+   the viewport stays fully reachable instead of being clipped off-screen. */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(0.5rem, 4vh, 3rem) 1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+}
+.modal {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 0.75rem 1rem;
+}
+/* Fluid up to its cap: full available width (minus the backdrop gutter) on
+   narrow screens, 46rem on desktop. The inner scroll handles long content. */
+.caps-modal {
+  width: min(64rem, 100%);
+  max-height: calc(100vh - clamp(1rem, 8vh, 6rem));
+  overflow: auto;
+}
+@media (max-width: 640px) {
+  .modal { padding: 0.6rem 0.7rem; border-radius: var(--radius); }
+  .caps-table { font-size: 13px; }
+  .caps-table td { padding: 0.2rem 0.25rem; }
+  /* Let long feature names wrap rather than force horizontal scroll. */
+  .cap-name { white-space: normal; overflow-wrap: anywhere; }
+}
+.caps-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }
+.caps-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.caps-table td { padding: 0.2rem 0.35rem; vertical-align: top; border-top: 1px solid var(--border-subtle); }
+.cap-mark { width: 1.2rem; text-align: center; font-weight: 700; }
+.cap-ok .cap-mark { color: var(--allow-fg); }
+.cap-no .cap-mark { color: var(--error); }
+.cap-name { font-family: var(--font-mono); white-space: nowrap; }
+.cap-notes { color: var(--on-surface-variant); }
+.cap-no .cap-name { color: var(--error); }
+
+/* Sections inside the engine-info modal (versions, then capabilities). The
+   border separator falls only between adjacent sections, not above the first. */
+.caps-section { margin-top: 0.6rem; }
+.caps-section + .caps-section { padding-top: 0.5rem; border-top: 1px solid var(--border); }
+.caps-section-head {
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-variant);
+  margin-bottom: 0.3rem;
+}
+.caps-version-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.15rem 0.75rem;
+  margin: 0;
+  font-size: 14px;
+}
+.caps-version-list dt { color: var(--on-surface-variant); }
+.caps-version-list dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.version-gh-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-surface-variant);
+  text-decoration: none;
+}
+.version-gh-link:hover,
+.version-gh-link:focus-visible { color: var(--on-surface); }
+
+/* -------- bpf view -------- */
+
+.bpf-view { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.bpf-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-container-low);
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+.bpf-controls input { width: 12rem; }
+.bpf-note { margin-left: auto; color: var(--on-surface-muted); cursor: help; }
+.bpf-programs { flex: 1; min-height: 0; overflow: auto; padding: 0.5rem 0.75rem; }
+.bpf-prog { border: 1px solid var(--border-subtle); border-radius: var(--radius); margin-bottom: 0.4rem; background: var(--surface-container-lowest); overflow: hidden; box-shadow: var(--shadow-sm); }
+.bpf-prog-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-radius: 0;
+  background: var(--surface-container-low);
+  padding: 0.35rem 0.5rem;
+  font-size: 14px;
+  cursor: pointer;
+}
+.bpf-prog-head:hover { background: var(--surface-container); }
+.bpf-tri { color: var(--on-surface-muted); width: 0.8rem; }
+.bpf-dir { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.08em 0.5em; border-radius: var(--radius-pill); }
+.bpf-dir-ingress { background: var(--badge-ingress-bg); color: var(--badge-ingress-fg); }
+.bpf-dir-egress { background: var(--badge-egress-bg); color: var(--badge-egress-fg); }
+.bpf-dir-iptables { background: var(--badge-iptables-bg); color: var(--badge-iptables-fg); }
+.bpf-dir-nftables { background: var(--badge-nftables-bg); color: var(--badge-nftables-fg); }
+.bpf-fam { font-size: 13px; color: var(--on-surface-variant); }
+.bpf-meta { font-size: 13px; }
+.bpf-asm {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--code-border);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere; /* break long comma-joined IP lists (no spaces to wrap on) */
+  background: var(--code-bg);
+  color: var(--code-text);
+}
+.bpf-asm.error { color: var(--deny-fg); }
+
+/* -------- origin coloring (bpf / iptables / nftables) -------- */
+
+/* Each origin maps to an accent var(--oc). The code views render disassembly
+   on a dark editor surface; each line/chain is *filled* with a light tint of
+   its origin color and printed in dark text, so where-it-came-from reads at a
+   glance while the text stays high-contrast and legible. The saturated origin
+   color is kept as a left-edge accent stripe. */
+.origin-policy   { --oc: var(--oc-policy); }
+.origin-profile  { --oc: var(--oc-profile); }
+.origin-endpoint { --oc: var(--oc-endpoint); }
+.origin-dispatch { --oc: var(--oc-dispatch); }
+.origin-static   { --oc: var(--oc-static); }
+
+/* bpf: one div per instruction line, left-edge accent stripe + origin-tinted
+   background with dark text. */
+.asm-line {
+  border-left: 3px solid var(--oc, transparent);
+  background: color-mix(in srgb, var(--oc, transparent) 22%, white);
+  color: #1a1a1a;
+  padding-left: 0.5rem;
+  margin-left: -0.75rem; /* pull the accent to the pre's left edge */
+}
+
+/* iptables/nft: chains rendered separately so they can be bordered by origin
+   and don't visually merge. The whole table area sits on the code surface. */
+.ipt-tables { display: flex; flex-direction: column; background: var(--code-bg); }
+.ipt-frame {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--code-frame);
+  padding: 0.1rem 0.75rem;
+}
+.ipt-chain {
+  border-left: 4px solid var(--oc, var(--border));
+  color: #1a1a1a;
+  background: color-mix(in srgb, var(--oc, transparent) 22%, white);
+  margin: 0 0 0.15rem;
+  padding: 0.3rem 0.75rem;
+}
+.ipt-line { white-space: pre; }
+
+/* inline jump/goto target: tint the referenced chain by its origin so a rule
+   inside an endpoint chain visibly points at the policy/profile it activates. */
+.origin-ref {
+  color: var(--oc);
+  font-weight: 700;
+  border-bottom: 1px dotted var(--oc);
+}
+
+.origin-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.3rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-container-low);
+  font-size: 13px;
+  color: var(--on-surface-variant);
+}
+.origin-key { display: inline-flex; align-items: center; gap: 0.3rem; }
+.origin-swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: var(--radius-sm);
+  background: var(--oc);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+/* -------- matrix -------- */
+
+.matrices { padding: 0.75rem; overflow: auto; height: 100%; }
+.matrix-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  height: 100%;
+  padding: 1.5rem;
+  text-align: center;
+}
+.matrix-empty-img {
+  width: 160px;
+  max-width: 60%;
+  height: auto;
+  opacity: 0.95;
+}
+.matrix-block + .matrix-block { margin-top: 1.25rem; }
+.matrix-block h3 {
+  margin: 0 0 0.4rem;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+}
+table.matrix { border-collapse: collapse; }
+table.matrix th, table.matrix td {
+  border: 1px solid var(--border-subtle);
+  padding: 0.2rem 0.5rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+table.matrix th {
+  background: var(--surface-container-low);
+  font-weight: 700;
+  text-align: left;
+}
+table.matrix th.sel { background: var(--sel-bg); color: var(--primary); }
+table.matrix tr.sel > th { background: var(--sel-bg); color: var(--primary); }
+table.matrix td.allow { background: var(--allow-bg); color: var(--allow-fg); }
+table.matrix td.deny  { background: var(--deny-bg); color: var(--deny-fg); }
+table.matrix td.mixed { background: var(--warning-bg); color: var(--warning-fg); font-size: 0.7em; white-space: nowrap; }
+table.matrix td:not(.self) { cursor: pointer; }
+
+/* Click-anchored breakdown popover, shared by matrix cells (per-probe
+   verdicts) and tier footers (subject endpoints). Native popover = top layer
+   + light dismiss. Positioned by inline left/top from the click. */
+.peek-popover {
+  position: fixed;
+  margin: 0;
+  width: 260px;
+  max-height: calc(100vh - 16px); /* never taller than the viewport */
+  overflow-y: auto;
+  padding: 0.5rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  color: inherit;
+  font-size: var(--text-sm);
+}
+.peek-popover .mp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+.peek-popover .mp-pair { font-weight: 600; overflow-wrap: anywhere; }
+.peek-popover .mp-agg { color: var(--on-surface-muted); white-space: nowrap; }
+.peek-popover .mp-note { color: var(--on-surface-muted); margin-bottom: 0.4rem; }
+.peek-popover .mp-controls { display: flex; gap: 0.25rem; margin-bottom: 0.4rem; }
+.peek-popover .mp-controls input {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.4rem;
+  background: transparent;
+  color: inherit;
+}
+.peek-popover .mp-chip {
+  font-size: var(--text-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.4rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.peek-popover .mp-chip.allow { color: var(--allow-fg); }
+.peek-popover .mp-chip.deny { color: var(--deny-fg); }
+.peek-popover .mp-chip.allow.on { background: var(--allow-bg); border-color: var(--allow-fg); }
+.peek-popover .mp-chip.deny.on { background: var(--deny-bg); border-color: var(--deny-fg); }
+.peek-popover .mp-list { max-height: 40vh; overflow-y: auto; }
+.peek-popover .mp-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.15rem 0.25rem;
+  border-radius: var(--radius-sm);
+}
+.peek-popover .mp-row.allow > span:last-child { color: var(--allow-fg); }
+.peek-popover .mp-row.deny > span:last-child { color: var(--deny-fg); }
+/* Bottom sheet on narrow screens - !important beats the inline click coords. */
+@media (max-width: 640px) {
+  .peek-popover {
+    left: 0 !important;
+    right: 0;
+    top: auto !important;
+    bottom: 0;
+    width: auto;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  .peek-popover .mp-list { max-height: 50vh; }
+}
+table.matrix td.self  { background: var(--self-bg); color: var(--self-fg); cursor: default; }
+table.matrix td.dim   { opacity: 0.35; }
+table.matrix th.system { color: var(--on-surface-muted); font-weight: 500; font-style: italic; background: var(--surface-container); }
+table.matrix tr.system > th { color: var(--on-surface-muted); font-weight: 500; font-style: italic; background: var(--surface-container); }
+/* External ([EXT]) endpoint headers - off-cluster, amber-tinted so they stand
+   out from both workloads and dimmed system pods. */
+table.matrix th.external,
+table.matrix tr.external > th {
+  color: var(--warning-fg);
+  font-weight: 700;
+  background: var(--warning-bg);
+}
+/* Host endpoint headers ([HEP]/[HOST]) - tinted with the brand so they read as
+   infrastructure rows distinct from workloads and the amber external rows. */
+table.matrix th.host,
+table.matrix tr.host > th {
+  color: var(--primary);
+  font-weight: 700;
+  background: var(--surface-container);
+}
+table.matrix th.host.unprotected,
+table.matrix tr.host.unprotected > th { color: var(--warning-fg); }
+/* The [HEP]/[HOST]/[EXT] tag chip on a row header. */
+.kind-tag {
+  display: inline-block;
+  margin-left: 0.3rem;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  padding: 0 0.2rem;
+  opacity: 0.85;
+}
+.rotate { display: inline-block; }
+
+/* -------- graph -------- */
+
+.graph-host {
+  position: absolute; inset: 0;
+}
+.legend {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 45%;
+  gap: 0.25rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.25rem;
+  box-shadow: var(--shadow-sm);
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-sm);
+}
+.legend-item.off { opacity: 0.45; }
+
+/* Probe chips collapse behind a native <details> dropdown - with many probes
+   the flat chip row swallowed the whole toolbar. */
+.legend-probes { position: relative; }
+.legend-probes > summary { list-style: none; cursor: pointer; white-space: nowrap; }
+.legend-probes > summary::-webkit-details-marker { display: none; }
+.legend-probes-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  min-width: max-content;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.25rem;
+  box-shadow: var(--shadow-sm);
+}
+.legend-probes-panel .legend-item { justify-content: flex-start; }
+
+/* --- Schema-driven policy wizard ------------------------------------------ */
+.wizard-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+}
+.wizard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--surface);
+  color: var(--on-surface);
+  overflow: hidden;
+}
+.wizard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.wizard-head-actions { display: flex; gap: 0.35rem; }
+.wizard-head-actions button {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--on-surface-variant);
+  border-radius: var(--radius-sm);
+  padding: 0.1rem 0.5rem;
+  cursor: pointer;
+}
+.wizard-kinds {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  overflow: auto;
+}
+.wizard-kind-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+.wizard-kind-grouplabel {
+  grid-column: 1 / -1;
+  font-size: var(--text-xs, 0.7rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-muted);
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+}
+.wizard-kind-group + .wizard-kind-group { margin-top: 0.5rem; }
+.wizard-kind {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, var(--radius-sm));
+  background: var(--glass-bg);
+  cursor: pointer;
+}
+.wizard-kind:hover { border-color: var(--primary); }
+.wizard-kind-title { font-weight: 600; font-size: var(--text-sm); }
+.wizard-kind-api { font-size: var(--text-xs, 0.7rem); color: var(--on-surface-muted); }
+.wizard-body {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 45%);
+  gap: 0;
+  min-height: 0;
+  flex: 1;
+}
+.wizard-form { overflow: auto; padding: 0.75rem; }
+.wizard-preview {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+  background: var(--glass-bg);
+  min-height: 0;
+}
+.wizard-preview-label {
+  font-size: var(--text-xs, 0.7rem);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-muted);
+  padding: 0.5rem 0.75rem 0;
+}
+.wizard-preview pre {
+  flex: 1;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  overflow: auto;
+  font-size: var(--text-sm);
+  white-space: pre;
+}
+.wizard-add { margin: 0.5rem 0.75rem; padding: 0.35rem; cursor: pointer; }
+
+/* Recursive fields */
+.wizard-field { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.5rem; }
+.wizard-field.wizard-check { flex-direction: row; align-items: center; gap: 0.4rem; }
+.wizard-label { font-size: var(--text-sm); color: var(--on-surface-variant); }
+.wizard-req { color: var(--danger-fg, #d33); margin-left: 0.15rem; }
+.wizard-field input,
+.wizard-field select,
+.wizard-map-row input,
+.wizard-addfield {
+  font-size: var(--text-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--on-surface);
+  padding: 0.2rem 0.35rem;
+}
+.wizard-nest,
+.wizard-array,
+.wizard-map {
+  border-left: 2px solid var(--border);
+  padding-left: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+.wizard-prop { display: flex; align-items: flex-start; gap: 0.35rem; }
+.wizard-prop > .wizard-field { flex: 1; }
+.wizard-item { display: flex; align-items: flex-start; gap: 0.35rem; margin-bottom: 0.35rem; }
+.wizard-item > :first-child { flex: 1; }
+.wizard-map-row { display: flex; gap: 0.35rem; margin-bottom: 0.25rem; }
+.wizard-drop {
+  border: 0;
+  background: transparent;
+  color: var(--on-surface-muted);
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+}
+.wizard-additem,
+.wizard-addfield {
+  font-size: var(--text-sm);
+  cursor: pointer;
+  margin-top: 0.15rem;
+}
+.wizard-additem {
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--on-surface-variant);
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.5rem;
+}
+/* Selector builder: free-text input + clause picker + operator buttons. */
+.wizard-selector { display: flex; flex-direction: column; gap: 0.3rem; }
+.wizard-sel-input {
+  font-size: var(--text-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--on-surface);
+  padding: 0.2rem 0.35rem;
+  font-family: var(--font-mono, monospace);
+}
+.wizard-sel-ops { display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; }
+.wizard-sel-op {
+  font-size: var(--text-xs, 0.72rem);
+  font-family: var(--font-mono, monospace);
+  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  color: var(--on-surface-variant);
+  border-radius: var(--radius-sm);
+  padding: 0.1rem 0.4rem;
+  cursor: pointer;
+}
+.wizard-sel-op:hover { border-color: var(--primary); color: var(--on-surface); }
+.wizard-sel-clause {
+  font-size: var(--text-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--on-surface);
+  padding: 0.15rem 0.3rem;
+}
+.legend-probes-actions { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-bottom: 0.15rem; }
+.legend-probes-actions button {
+  flex: 1;
+  font-size: var(--text-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: var(--radius-sm);
+  padding: 0.1rem 0.4rem;
+  cursor: pointer;
+}
+.legend-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  box-sizing: border-box;
+}
+/* Arrow key: its own always-on box, bottom-right (Controls are bottom-left),
+   stacked vertically so every arrow type reads as a list. */
+.arrow-legend {
+  top: auto;
+  right: 8px;
+  bottom: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  max-width: none;
+}
+.legend-edge { display: inline-block; vertical-align: middle; overflow: visible; }
+/* Marching dashes for animated edges (mixed = interleaved green/red). Shared by
+   the graph edges (DistanceArcEdge) and the legend swatch. Period = dash+gap. */
+@keyframes edge-march {
+  to { stroke-dashoffset: -12; }
+}
+
+.pod-node {
+  width: 140px;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.3rem 0.45rem;
+  box-shadow: var(--shadow-sm);
+}
+.pod-node.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+.pod-node.system {
+  background: var(--surface-container);
+  border-color: var(--border);
+  opacity: 0.78;
+}
+.pod-node.system .pod-node-name { color: var(--on-surface-variant); font-weight: 500; }
+.pod-node-name {
+  font-size: 12px;
+  font-weight: 700;
+  /* Pinned: POD_NAME_BAND (useElkLayout) reserves height for 2 lines at this
+     leading. Don't let the body's looser line-height cascade in here. */
+  line-height: var(--leading-tight);
+  margin-bottom: 0.15rem;
+  /* Cap at 2 lines so a long name can't grow past the height ELK reserved for
+     this pod (see useElkLayout POD_NAME_BAND) - which would overlap neighbours. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pod-node-labels {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--on-surface-variant);
+  line-height: 1.25;
+}
+.pod-node-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pod-node-label .k { color: var(--on-surface-muted); }
+.pod-node-label .v { color: var(--allow-fg); }
+/* Connection handles rendered as tiny IN/OUT boxes, both on the TOP edge
+   (IN left of center, OUT right of center) so ingress and egress read off the
+   node at a glance without hunting opposite sides. */
+.pod-handle {
+  width: 18px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--primary);
+}
+.pod-handle.in { left: 30%; }
+.pod-handle.out { left: 70%; }
+.pod-handle.in::after { content: 'IN'; }
+.pod-handle.out::after { content: 'EG'; }
+
+.ns-group {
+  width: 100%;
+  height: 100%;
+  background: var(--ns-group-bg);
+  border: 1px dashed var(--primary-container);
+  border-radius: var(--radius-lg);
+  position: relative;
+}
+.ns-group-label {
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--primary);
+  background: var(--surface-container-lowest);
+  padding: 0 0.3rem;
+  border-radius: var(--radius-sm);
+}
+.ns-group.system {
+  background: var(--ns-group-bg-system);
+  border-color: var(--border);
+}
+.ns-group.system .ns-group-label { color: var(--on-surface-muted); background: var(--surface-container-low); }
+
+/* --- tier view: pillars + policy cards (graph groupBy 'tier') ------------- */
+.tier-pillar {
+  width: 100%;
+  height: 100%;
+  background: var(--surface-container-low);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--primary-container);
+  border-radius: var(--radius-lg);
+  position: relative;
+}
+.tier-pillar.reserved {
+  background: var(--surface-container);
+  border-top-color: var(--outline);
+}
+.tier-pillar.undefined-tier {
+  border-top-color: var(--error);
+  border-color: var(--error-border);
+}
+.tier-pillar-label {
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 11px;
+}
+.tier-pillar-label .tier-name {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--primary);
+}
+.tier-pillar.reserved .tier-pillar-label .tier-name { color: var(--on-surface-variant); }
+.tier-pillar-label .tier-badge {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--on-surface-muted);
+  background: var(--surface-container-highest);
+  border-radius: var(--radius-sm);
+  padding: 0 0.25rem;
+}
+.tier-pillar-label .tier-badge.warn { color: var(--on-primary); background: var(--error); }
+.tier-pillar-label .tier-meta { margin-left: auto; color: var(--on-surface-muted); font-size: 10px; }
+
+/* End-of-tier default action, pinned to the bottom of the pillar. Deny reads
+   as a hard stop (red); Pass reads as fall-through to the next tier (green). */
+.tier-pillar-footer {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 6px;
+  cursor: pointer; /* opens the subject-endpoints popover */
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-radius: var(--radius-sm);
+  padding: 2px 0;
+  border: 1px dashed transparent;
+}
+/* End-of-tier action colours come from the shared action palette (--act-*, see
+   actionColors.ts): Deny = red, Pass = grey - the same scheme as the graph
+   edges and policy-card borders. */
+.tier-pillar-footer.deny { color: var(--act-deny); border-color: var(--act-deny); background: color-mix(in srgb, var(--act-deny) 12%, transparent); }
+.tier-pillar-footer.pass { color: var(--act-pass); border-color: var(--act-pass); background: color-mix(in srgb, var(--act-pass) 12%, transparent); }
+
+/* Highlight-on-select (tier view): when an endpoint is selected, the policies
+   that select it and the tiers whose end-of-tier action is in its path light
+   up; everything else fades so the endpoint's footprint reads at a glance. */
+.tier-pillar.dim { opacity: 0.4; }
+.tier-pillar.subject { border-top-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-container); }
+.tier-pillar-footer.subject { border-style: solid; font-weight: 700; }
+/* Endpoint count subject to the tier - dimmed so it rides alongside the action
+   without competing with it. */
+.tier-pillar-footer .tier-footer-count { opacity: 0.7; font-weight: 400; }
+.policy-card.dim { opacity: 0.32; }
+.policy-card.matched {
+  border-color: var(--primary);
+  border-left-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-container);
+  background: var(--surface);
+}
+
+.policy-card {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 5px 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.policy-card.staged { border-left-style: dashed; opacity: 0.85; }
+.policy-card-head { display: flex; align-items: baseline; gap: 0.35rem; }
+.policy-card .policy-kind {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--on-primary-container);
+  background: var(--primary-container);
+  border-radius: var(--radius-sm);
+  padding: 0 0.25rem;
+  flex: none;
+}
+.policy-card .policy-name {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* Grow to fill so every trailing chip (order/staged/hook/affected) clusters at
+     the right edge; min-width:0 keeps the ellipsis working inside the flex row. */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.policy-card .policy-order { font-size: 9px; color: var(--on-surface-muted); flex: none; }
+.policy-card .policy-staged { font-size: 9px; color: var(--secondary); flex: none; }
+/* HEP hook badge (preDNAT / doNotTrack / applyOnForward): amber, matching the
+   graph's cross-node/host-firewall vocabulary. Signals this policy is evaluated
+   ahead of the normal tier chain, so its pillar position isn't its eval order. */
+.policy-card .policy-hook {
+  font-size: 9px;
+  font-weight: 700;
+  color: #7a4f00;
+  background: #ffe0a3;
+  border-radius: var(--radius-sm);
+  padding: 0 0.25rem;
+  flex: none;
+  white-space: nowrap;
+}
+/* Endpoint-footprint count: how many endpoints this policy selects. Muted by
+   default; an orphan (selects nothing) reads as a warning so it stands out. */
+.policy-card .policy-affected { font-size: 9px; color: var(--on-surface-muted); flex: none; white-space: nowrap; }
+.policy-card .policy-affected.orphan { color: var(--error, #c5221f); font-weight: 700; }
+.policy-card .policy-selector {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Nested namespace box (node mode's node → namespace → pod). Lighter + solid so
+   it reads as a sub-box inside the node, not a peer of it. The namespace accent
+   color (border + label) is applied inline by NamespaceGroup. */
+/* A nested namespace (inside a node box, node view) is the SAME namespace box
+   as the top-level one - dashed border, same tint, same label - so a namespace
+   reads identically in every view. `nested` only carries the layout floor that
+   the tighter in-node context needs, never a different appearance. */
+.ns-group.nested {
+  min-width: 150px;
+  min-height: 62px;
+}
+
+/* --- node-grouped mode: node boxes, HEP bands, namespace chip ----------- */
+.node-group {
+  width: 100%;
+  height: 100%;
+  /* ELK sizes a pod-less node box to its padding only; keep a floor so the
+     node label (e.g. an empty control-plane) stays legible. */
+  min-width: 150px;
+  min-height: 54px;
+  background: var(--ns-group-bg);
+  border: 1px solid var(--primary-container);
+  border-radius: var(--radius-lg);
+  position: relative;
+}
+/* No HostEndpoint => Calico doesn't police the host: dashed amber border. */
+.node-group.unprotected {
+  border-style: dashed;
+  border-color: var(--warning-fg);
+  background: rgba(176, 116, 0, 0.05);
+}
+/* The unscheduled holding box is a non-node: neutral, recessed. */
+.node-group.unscheduled {
+  border-style: dotted;
+  border-color: var(--border);
+  background: var(--surface-container);
+}
+.node-group.system { background: var(--ns-group-bg-system); border-color: var(--border); }
+.node-group-label {
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--primary);
+  background: var(--surface-container-lowest);
+  padding: 0 0.35rem;
+  border-radius: var(--radius-sm);
+}
+.node-group.unprotected .node-group-label { color: var(--warning-fg); }
+.node-group-badges {
+  position: absolute;
+  top: 4px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.node-group-icon { font-size: 11px; line-height: 1; }
+.node-group-tag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--warning-fg);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  padding: 0 0.2rem;
+}
+
+.hep-node {
+  width: 190px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--surface-container-high, var(--surface-container));
+  border: 1px solid var(--primary);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.4rem;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+.hep-node.selected { box-shadow: 0 0 0 2px var(--ring); }
+.hep-node.system { opacity: 0.8; border-color: var(--border); border-left-color: var(--on-surface-muted); }
+/* Unprotected host (no HEP) - amber/dashed left edge, the [HOST] posture. */
+.hep-node.unprotected { border-color: var(--warning-fg); border-left-color: var(--warning-fg); border-left-style: dashed; }
+.hep-node-icon { font-size: 11px; line-height: 1; }
+.hep-node-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hep-node-tag {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--on-surface-muted);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  padding: 0 0.15rem;
+}
+
+/* Namespace chip on a pod (node mode only - the namespace box is gone). */
+/* Group-by toggle, top-left of the graph (mirrors the legend's glass chrome). */
+.graph-toolbar {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+.graph-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+/* hide-system / emphasize checkboxes - same glass chrome as the toggles. */
+.graph-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: var(--text-sm);
+  color: var(--on-surface-variant);
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.2rem 0.5rem;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+.graph-check input { margin: 0; cursor: pointer; }
+/* Empty-state hint for focus mode (no edges until a node is focused). */
+.graph-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  font-size: var(--text-md);
+  color: var(--on-surface-muted);
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.4rem 0.75rem;
+}
+/* Tier-view variant: a status strip at the bottom instead of a box floating
+   over the pillars (they grow from the top, so the bottom stays clear). */
+.graph-hint.bottom {
+  top: auto;
+  bottom: 12px;
+  transform: translateX(-50%);
+  font-size: var(--text-sm);
+  box-shadow: var(--shadow-sm);
+  pointer-events: none;
+}
+.groupby-toggle {
+  display: inline-flex;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.15rem;
+  box-shadow: var(--shadow-sm);
+}
+.groupby-btn {
+  font-size: var(--text-sm);
+  text-transform: capitalize;
+  border: 0;
+  background: transparent;
+  color: var(--on-surface-variant);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+.groupby-btn.active { background: var(--primary); color: var(--on-primary); }
+
+/* External ([EXT]) endpoints - off-cluster destinations, amber accent. */
+.legend-swatch.dashed { border-style: dashed; border-radius: 0; }
+.pod-node.external { border-color: var(--warning-fg); }
+.pod-node-ext {
+  display: inline-block;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--on-primary);
+  background: var(--warning-fg);
+  border-radius: var(--radius-sm);
+  padding: 0 0.2rem;
+  margin-right: 0.3rem;
+  vertical-align: middle;
+}
+/* Per-pod ingress-port chip (⊟ open/total): hover for the per-port tooltip.
+   Tinted by tone - all-open green, none-open red, mixed amber - reusing the
+   matrix allow/deny vocabulary so it reads at a glance. */
+.pod-node-ports {
+  display: inline-block;
+  font-size: 8px;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  padding: 0 0.2rem;
+  margin-left: 0.3rem;
+  vertical-align: middle;
+  cursor: help;
+  white-space: nowrap;
+}
+.pod-node-ports.open { color: var(--on-primary); background: var(--allow-fg); }
+.pod-node-ports.closed { color: var(--on-primary); background: var(--deny-fg); }
+.pod-node-ports.mixed { color: var(--on-primary); background: var(--warning-fg); }
+/* Internet-access globe (green=access, red=none, amber=partial). Inline so it
+   flows with the pod name / group label; the SVG inherits the tint via color. */
+.globe {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  vertical-align: -2px;
+  margin-right: 0.25rem;
+}
+.ns-group-label .globe,
+.node-group-label .globe { margin-right: 0; margin-left: 0.3rem; }
+.hep-node .globe { margin-right: 0; }
+/* Cross-node badge (⇄): endpoint communicates across node boundaries - replaces
+   the busy inter-node edges. Amber, matching the prior cross-node accent. */
+.xnode {
+  color: var(--warning-fg);
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+  cursor: help;
+}
+.hep-node .xnode { margin-right: 0; }
+/* The off-cluster zone box (namespace "world" / node-mode internet group). */
+.ns-group.external,
+.node-group.external {
+  border-style: dashed;
+  border-color: var(--warning-fg);
+  background: var(--warning-bg);
+}
+.ns-group.external .ns-group-label,
+.node-group.external .node-group-label { color: var(--warning-fg); }
+/* Softer "cloud" silhouette + bigger globe so the internet zone stops sharing
+   the cluster boxes' rectangular look. */
+.node-group.external { border-radius: 24px; }
+.node-group.external .node-group-icon { font-size: 14px; }
+
+/* The aggregate "cluster hosts" zone (namespace view): infrastructure, not a
+   namespace - slate border + faint diagonal stripes instead of the ns blue.
+   Declared after .unprotected so the realm texture wins over its amber. */
+.node-group.zone-hosts {
+  border: 1px solid var(--on-surface-muted);
+  border-radius: var(--radius-sm);
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(128, 128, 128, 0.07) 10px,
+    rgba(128, 128, 128, 0.07) 12px
+  );
+}
+.node-group.zone-hosts .node-group-label { color: var(--on-surface-muted); }
+
+/* WORLD endpoints: compact globe pill - they're off-cluster destinations, not
+   pods, so no label/port chrome. Same amber family as the internet zone. */
+.world-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px dashed var(--warning-fg);
+  border-radius: 999px;
+  background: var(--surface-container-lowest);
+  box-shadow: var(--shadow-sm);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--warning-fg);
+}
+.world-node.selected {
+  border-style: solid;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+.world-node-icon { font-size: 13px; line-height: 1; }
+
+/* React Flow chrome (zoom/fit controls, attribution, background dots) ships
+   with hardcoded light styling. Re-point its --xy-* custom properties at our
+   design tokens so it tracks light/dark like everything else - set on the
+   .react-flow root so the values cascade into the Controls portal. */
+.react-flow {
+  --xy-controls-button-background-color: var(--surface-container-lowest);
+  --xy-controls-button-background-color-hover: var(--surface-container);
+  --xy-controls-button-color: var(--on-surface);
+  --xy-controls-button-color-hover: var(--primary);
+  --xy-controls-button-border-color: var(--border-subtle);
+  --xy-controls-box-shadow: var(--shadow-md);
+  --xy-background-pattern-color: var(--border);
+  --xy-attribution-background-color: var(--glass-bg);
+}
+.react-flow__controls { border-radius: var(--radius); overflow: hidden; }
+.react-flow__edges,
+.react-flow__edge { pointer-events: none !important; }
+
+/* --- Exam track (ExamPane) ------------------------------------------------ */
+/* The exam pane reuses .tutorial / .docs layout; these styles add the submit
+   affordance, the per-check grade report, and the passed checkmark/badge. */
+.exam-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.25rem 0.25rem;
+  flex-wrap: wrap;
+}
+.btn {
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-container-lowest);
+  color: var(--on-surface);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.btn:hover { background: var(--surface-container); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: transparent;
+}
+.btn.primary:hover { background: var(--primary-hover); }
+/* OAuth sign-in buttons, one per enabled backend (slack|google|github). */
+.btn.oauth-btn { color: #fff; border-color: transparent; }
+.btn.oauth-btn:hover { filter: brightness(1.08); }
+.btn.slack-btn { background: #4a154b; } /* Slack aubergine */
+.btn.google-btn { background: #1a73e8; } /* Google blue */
+.btn.github-btn { background: #24292f; } /* GitHub dark */
+/* Login gate: shown in place of the exam track when login is configured but
+   nobody's signed in. A centered card with one sign-in button per backend. */
+.exam-login-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 16rem;
+  padding: 1.5rem;
+  gap: 1.5rem;
+}
+.exam-badge-container {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+.exam-login-badge {
+  max-width: 200px;
+  width: 100%;
+  height: auto;
+}
+.exam-badge-teaser {
+  position: absolute;
+  top: 50%;
+  right: -110px;
+  transform: translateY(-50%);
+  margin: 3rem 0 0 0;
+  padding: 0.75rem 1rem;
+  font-size: var(--text-md);
+  font-weight: 600;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 1rem;
+  white-space: nowrap;
+}
+.exam-badge-teaser::after {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-right: 8px solid var(--primary);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+.exam-login-card {
+  max-width: 26rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-container-lowest);
+  padding: 1.5rem 1.75rem;
+}
+.exam-login-title { font-size: var(--text-lg); font-weight: 800; margin: 0 0 0.5rem; }
+.exam-login-body {
+  font-size: var(--text-sm);
+  color: var(--on-surface-variant);
+  margin: 0 0 1.25rem;
+  line-height: 1.5;
+}
+.exam-login-providers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+.exam-login-providers .oauth-btn { justify-content: center; }
+.exam-login-error {
+  margin: 0.75rem 0 0;
+  color: var(--danger, #c0392b);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+/* "First time here?" callout: visually distinct (tinted, bordered) so the
+   workspace sign-in step is hard to miss, but lighter-weight than the primary
+   provider button above so it doesn't compete with it. */
+.exam-login-workspace {
+  margin: 1rem 0 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface-container-lowest));
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  text-align: center;
+}
+.exam-login-workspace-title {
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--on-surface);
+}
+.exam-login-workspace-text {
+  font-size: var(--text-sm);
+  color: var(--on-surface-variant);
+  line-height: 1.45;
+}
+.exam-login-workspace-btn {
+  justify-content: center;
+  font-weight: 600;
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--surface-container-lowest);
+}
+.exam-login-workspace-btn:hover {
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.exam-login-notice {
+  margin: 1.25rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--on-surface-muted);
+  line-height: 1.5;
+}
+.exam-login-notice a { color: var(--primary); text-decoration: underline; }
+.exam-login-notice a:hover { color: var(--primary-hover); }
+
+.exam-error {
+  color: var(--on-error-container);
+  background: var(--error-container);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.6rem;
+  font-size: var(--text-sm);
+  margin-top: 0.5rem;
+}
+
+.exam-result {
+  margin: 0.5rem 0.25rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.75rem;
+  background: var(--surface-container-lowest);
+}
+.exam-result.pass { border-color: var(--tertiary); }
+.exam-result.fail { border-color: var(--error-border); }
+.exam-verdict { font-weight: 800; font-size: var(--text-md); margin-bottom: 0.4rem; }
+.exam-result.pass .exam-verdict { color: var(--tertiary); }
+.exam-result.fail .exam-verdict { color: var(--error); }
+.exam-recorded { font-weight: 600; color: var(--on-surface-muted); }
+
+.exam-checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.exam-checks li { display: flex; gap: 0.5rem; align-items: baseline; font-size: var(--text-sm); }
+.exam-check-mark { font-weight: 800; }
+.exam-checks li.ok .exam-check-mark { color: var(--tertiary); }
+.exam-checks li.bad .exam-check-mark { color: var(--error); }
+.exam-check-detail { color: var(--on-surface-muted); }
+
+.exam-passed-badge {
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tertiary);
+  border: 1px solid var(--tertiary);
+  border-radius: var(--radius-pill);
+  padding: 0.05rem 0.45rem;
+}
+
+/* One-at-a-time exam track: the current exam's title (no picker), the advance
+   affordance shown after a pass, and the all-done completion card. */
+.exam-title {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  margin: 0.25rem 0 0.5rem;
+}
+.exam-advance {
+  display: flex;
+  padding: 0.75rem 0.25rem 0.25rem;
+}
+.exam-complete {
+  border: 1px solid var(--tertiary);
+  border-radius: var(--radius);
+  background: var(--surface-container-lowest);
+  padding: 1rem;
+  text-align: center;
+}
+.exam-complete-title {
+  color: var(--tertiary);
+  font-size: var(--text-md);
+  font-weight: 800;
+  margin: 0 0 0.4rem;
+}
+.exam-complete p { margin: 0; color: var(--on-surface-muted); font-size: var(--text-sm); }
+/* "Advancing…" note shown in auto-advance mode between the pass and the jump. */
+.exam-advancing {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--tertiary);
+}
+
+/* Signed-in user chip in the docs pane head. */
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  max-width: 16rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.signout-btn {
+  flex: none;
+  border: 1px solid var(--outline-variant);
+  background: transparent;
+  color: var(--on-surface-variant);
+  font: inherit;
+  font-size: var(--text-xs);
+  line-height: 1;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.signout-btn:hover { background: var(--surface-variant); color: var(--on-surface); }
+
+/* ============================================================================
+   Responsive layout (mobile + tablet)
+
+   Desktop is the four-pane splitter workspace. Below 1024px the app switches to
+   space-restricted layouts driven by App's `mode`:
+     - tablet (<=1024px): one column-pair (two stacked panes) at a time, swapped
+       by a bottom toggle; the toolbar's middle actions fold into a "⋯" menu.
+     - phone  (<=720px):  one pane at a time, swapped by a bottom tab bar.
+   Markup is shared with desktop - these rules only re-flow it.
+   ============================================================================ */
+
+/* The single pane the phone layout shows: fills the workspace row. */
+.mobile-pane {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* The tablet column-pair is the lone child of the flex-row .layout; make it
+   span the full width (a bare .layout-col would shrink to its content). */
+.tablet-col {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+/* Bottom navigation shared by both compact modes: the phone's 4-pane tab bar
+   and the tablet's 2-way column-pair toggle. Pinned below .layout inside the
+   flex-column .app, so it never scrolls away. Buttons are >=44px tall for a
+   comfortable touch target. */
+.mobile-tabbar {
+  flex: 0 0 auto;
+  display: flex;
+  /* sticky pins the bar to the bottom so it can't scroll out of view on mobile. */
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  border-top: 1px solid var(--border);
+  background: var(--surface-container-lowest);
+  /* Keep the bar clear of the iOS/Android home indicator. */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.mobile-tabbar button {
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 0.4rem 0.25rem;
+  font-size: 13px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+.mobile-tabbar button.active {
+  color: var(--primary);
+  font-weight: 700;
+  box-shadow: inset 0 2px 0 var(--primary);
+  background: var(--surface-container-low);
+}
+.mobile-tabbar button:hover:not(.active) { background: var(--surface-container); }
+
+/* Full-screen click-catcher under the open overflow dropdown (above the page,
+   below the dropdown panel at z-index 60). */
+.tb-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+}
+
+/* --- Compact toolbar: phone + tablet (<=1024px) --------------------------- */
+@media (max-width: 1024px) {
+  .tb-overflow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.7rem;
+    min-height: 1.7rem;
+    padding: 0.2rem 0.4rem;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--on-surface-muted);
+    background: var(--glass-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+  }
+  .tb-overflow:hover { color: var(--primary); border-color: var(--border); }
+
+  /* The action clusters become a dropdown panel anchored under the toolbar,
+     hidden until .open (toggled by the overflow button). */
+  .tb-actions {
+    position: absolute;
+    top: 3.25rem;
+    right: 0.5rem;
+    z-index: 60;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    min-width: 13rem;
+    padding: 0.5rem;
+    background: var(--surface-container-lowest);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+  }
+  .tb-actions.open { display: flex; }
+  .tb-actions .tb-group { width: 100%; flex-wrap: wrap; }
+  .tb-actions .tb-group button { flex: 1 1 auto; }
+  /* Dividers and the verbose baseline pill don't belong in a vertical menu. */
+  .tb-actions .tb-divider { display: none; }
+  .tb-actions .baseline-info { display: none; }
+
+  /* Larger seam hit areas for touch dragging of the stacked split. */
+  .splitter-row { height: 12px; }
+  .splitter-col { width: 12px; }
+
+  /* The status text competes with the brand for the squeezed top bar; the
+     dropdown and per-pane state carry the same information. */
+  .toolbar .status { display: none; }
+}
+
+/* --- Phone-only (<=720px) ------------------------------------------------- */
+@media (max-width: 720px) {
+  .toolbar { padding: 0 0.6rem; gap: 0.35rem; }
+  .tb-wordmark { font-size: 18px; }
+  .toolbar-logo { height: 1.6rem; }
+  /* Pane headers carry several tabs (docs: playground/tutorials/exams; view:
+     matrix/graph/bpf/iptables/nftables) - let them wrap instead of overflowing
+     or forcing a horizontal scroll on the whole pane. */
+  .pane-head { flex-wrap: wrap; }
+}
+
+/* --- Boot screens (App gates on the backend before rendering) ------------- */
+/* Full-viewport centered card shown while the baseline topology loads, or when
+   the Go backend is unreachable. Mirrors main.tsx's crash-page look. */
+.boot-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 100vh;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: var(--on-surface);
+  background: var(--surface);
+}
+.boot-logo { height: 4rem; width: auto; }
+.boot-screen h1 { font-size: var(--text-xl); margin: 0; }
+.boot-screen p { max-width: 34rem; margin: 0; color: var(--on-surface-muted); }
+.boot-screen button {
+  padding: 0.5rem 1.1rem;
+  cursor: pointer;
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  background: var(--primary);
+  color: var(--surface);
+}
+.boot-screen button:hover { background: var(--primary-hover); }
+.boot-detail {
+  max-width: 40rem;
+  margin: 0.5rem 0 0;
+  padding: 0.75rem;
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 6px;
+  color: var(--code-text);
+  font-size: var(--text-xs);
+  overflow: auto;
+}
+.boot-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: boot-spin 0.8s linear infinite;
+}
+@keyframes boot-spin { to { transform: rotate(360deg); } }

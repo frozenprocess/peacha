@@ -1,0 +1,198 @@
+{
+  "_meta": {
+    "plugin": "k8s",
+    "context": "<current>",
+    "generated_at": "2026-06-01T05:25:49Z",
+    "regenerate_with": "python3 snapshot-cni.py --plugin k8s > workloads/k8s-snapshot.json"
+  },
+  "namespaces": [
+    {
+      "name": "kube-system",
+      "labels": {
+        "kubernetes.io/metadata.name": "kube-system"
+      }
+    },
+    {
+      "name": "local-path-storage",
+      "labels": {
+        "kubernetes.io/metadata.name": "local-path-storage"
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "name": "policy-llm-control-plane",
+      "ip": "172.18.0.2",
+      "interfaceName": "eth0",
+      "labels": {
+        "beta.kubernetes.io/arch": "amd64",
+        "beta.kubernetes.io/os": "linux",
+        "kubernetes.io/arch": "amd64",
+        "kubernetes.io/hostname": "policy-llm-control-plane",
+        "kubernetes.io/os": "linux",
+        "node-role.kubernetes.io/control-plane": "",
+        "node.kubernetes.io/exclude-from-external-load-balancers": ""
+      }
+    },
+    {
+      "name": "policy-llm-worker",
+      "ip": "172.18.0.3",
+      "interfaceName": "eth0",
+      "labels": {
+        "beta.kubernetes.io/arch": "amd64",
+        "beta.kubernetes.io/os": "linux",
+        "kubernetes.io/arch": "amd64",
+        "kubernetes.io/hostname": "policy-llm-worker",
+        "kubernetes.io/os": "linux"
+      }
+    }
+  ],
+  "endpoints": [
+    {
+      "id": "kube-system/coredns",
+      "namespace": "kube-system",
+      "app": "coredns",
+      "pod": "coredns-7d764666f9-5xlvs",
+      "ip": "192.168.248.205",
+      "labels": {
+        "k8s-app": "kube-dns",
+        "pod-template-hash": "7d764666f9"
+      },
+      "probe_source": false,
+      "node": "policy-llm-control-plane",
+      "ports": [
+        {
+          "name": "dns",
+          "port": 53,
+          "protocol": "UDP"
+        },
+        {
+          "name": "dns-tcp",
+          "port": 53,
+          "protocol": "TCP"
+        },
+        {
+          "name": "metrics",
+          "port": 9153,
+          "protocol": "TCP"
+        },
+        {
+          "name": "liveness-probe",
+          "port": 8080,
+          "protocol": "TCP"
+        },
+        {
+          "name": "readiness-probe",
+          "port": 8181,
+          "protocol": "TCP"
+        }
+      ]
+    },
+    {
+      "id": "kube-system/etcd",
+      "namespace": "kube-system",
+      "app": "etcd",
+      "pod": "etcd-policy-llm-control-plane",
+      "ip": "172.18.0.2",
+      "labels": {
+        "component": "etcd",
+        "tier": "control-plane"
+      },
+      "node": "policy-llm-control-plane",
+      "host_network": true,
+      "ports": [
+        {
+          "name": "probe-port",
+          "port": 2381,
+          "protocol": "TCP"
+        }
+      ]
+    },
+    {
+      "id": "kube-system/kube-apiserver",
+      "namespace": "kube-system",
+      "app": "kube-apiserver",
+      "pod": "kube-apiserver-policy-llm-control-plane",
+      "ip": "172.18.0.2",
+      "labels": {
+        "component": "kube-apiserver",
+        "tier": "control-plane"
+      },
+      "node": "policy-llm-control-plane",
+      "host_network": true,
+      "ports": [
+        {
+          "name": "probe-port",
+          "port": 6443,
+          "protocol": "TCP"
+        }
+      ]
+    },
+    {
+      "id": "kube-system/kube-controller-manager",
+      "namespace": "kube-system",
+      "app": "kube-controller-manager",
+      "pod": "kube-controller-manager-policy-llm-control-plane",
+      "ip": "172.18.0.2",
+      "labels": {
+        "component": "kube-controller-manager",
+        "tier": "control-plane"
+      },
+      "node": "policy-llm-control-plane",
+      "host_network": true,
+      "ports": [
+        {
+          "name": "probe-port",
+          "port": 10257,
+          "protocol": "TCP"
+        }
+      ]
+    },
+    {
+      "id": "kube-system/kube-proxy",
+      "namespace": "kube-system",
+      "app": "kube-proxy",
+      "pod": "kube-proxy-9tz7h",
+      "ip": "172.18.0.3",
+      "labels": {
+        "controller-revision-hash": "69494898cd",
+        "k8s-app": "kube-proxy",
+        "pod-template-generation": "1"
+      },
+      "node": "policy-llm-worker",
+      "host_network": true
+    },
+    {
+      "id": "kube-system/kube-scheduler",
+      "namespace": "kube-system",
+      "app": "kube-scheduler",
+      "pod": "kube-scheduler-policy-llm-control-plane",
+      "ip": "172.18.0.2",
+      "labels": {
+        "component": "kube-scheduler",
+        "tier": "control-plane"
+      },
+      "node": "policy-llm-control-plane",
+      "host_network": true,
+      "ports": [
+        {
+          "name": "probe-port",
+          "port": 10259,
+          "protocol": "TCP"
+        }
+      ]
+    },
+    {
+      "id": "local-path-storage/local-path-provisioner",
+      "namespace": "local-path-storage",
+      "app": "local-path-provisioner",
+      "pod": "local-path-provisioner-67b8995b4b-wnkx8",
+      "ip": "192.168.248.203",
+      "labels": {
+        "app": "local-path-provisioner",
+        "pod-template-hash": "67b8995b4b"
+      },
+      "node": "policy-llm-control-plane"
+    }
+  ]
+}

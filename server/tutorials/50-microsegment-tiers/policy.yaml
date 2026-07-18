@@ -1,0 +1,44 @@
+# Lesson 50 - microsegmentation: a single Calico NetworkPolicy that enforces the
+# textbook tiered-app rule "traffic flows web -> app -> data, and never skips a
+# tier."
+#
+# The policy is namespaced (prod) and selects all() - so every prod pod is in
+# scope and flips to ingress default-deny. Two ingress rules then carve out the
+# only two legitimate hops, each pinned by BOTH ends:
+#
+#   rule 1: source tier=web   -> destination tier=app    (frontend -> backend)
+#   rule 2: source tier=app   -> destination tier=data   (backend  -> database)
+#
+# Everything not named is denied by the implicit default-deny, which is the
+# whole point:
+#   - frontend -> database is a tier SKIP (web straight to data) -> denied,
+#   - database -> backend is BACKWARDS (data to app)             -> denied,
+#   - nothing may initiate to the web tier at all.
+#
+# Pinning both source AND destination is what makes this microsegmentation
+# rather than a flat allowlist: each rule describes one directed edge of the
+# tier graph.
+apiVersion: projectcalico.org/v3
+kind: NetworkPolicy
+metadata:
+  name: prod-tier-microsegmentation
+  namespace: prod
+spec:
+  selector: all()
+  types:
+    - Ingress
+  ingress:
+    - action: Allow
+      protocol: TCP
+      source:
+        selector: tier == 'web'
+      destination:
+        selector: tier == 'app'
+        ports: [8080]
+    - action: Allow
+      protocol: TCP
+      source:
+        selector: tier == 'app'
+      destination:
+        selector: tier == 'data'
+        ports: [8080]

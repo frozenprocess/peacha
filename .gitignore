@@ -1,1 +1,32 @@
-./backend/calico
+# Build output.
+bin/
+# Stray `make build-go` binary if built at the repo root instead of bin/.
+/editor
+
+# Runtime SQLite stores (results/share-links) - regenerate from RESULTS_FILE/
+# SHARE_FILE; never version them.
+*.db
+*.db-shm
+*.db-wal
+
+# Local OAuth credentials for `make dev-auth` (keep the .example committed).
+.env.auth
+
+# Filled-in k8s OAuth credential Secret (keep secret.example.yaml committed).
+deploy/k8s/secret.yaml
+
+# Frontend.
+web/node_modules/
+web/dist/
+web/tsconfig.tsbuildinfo
+
+# Generated //go:embed mirrors (server/exams synced from third_party/exams by
+# the Makefile). The submodules under third_party/ are tracked via .gitmodules;
+# the private exams repo is cloned into third_party/exams at build time and, like
+# the rest of third_party/, is gitignored so it never ships in a public checkout.
+server/dist/*
+!server/dist/.placeholder
+server/exams/*
+!server/exams/README.md
+third_party
+editor

@@ -1,0 +1,8 @@
+{
+  "name": "ptee-gnp-default-deny",
+  "flavor": "calico",
+  "title": "GlobalNetworkPolicy: one default-deny for the whole cluster",
+  "track": "Policy types, end to end",
+  "order": 60,
+  "summary": "The cluster-scoped Calico kind. One GlobalNetworkPolicy with namespaceSelector has(projectcalico.org/name) flips every namespaced pod in prod AND dev to default-deny at once, then carves back a single web-to-app path. The zero-trust baseline the rest of the track tightens."
+}

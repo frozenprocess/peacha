@@ -1,0 +1,8 @@
+{
+  "name": "ptee-contain-infra-blast-radius",
+  "flavor": "calico",
+  "title": "Contain the blast radius: keep pods away from the control plane",
+  "track": "Policy types, end to end",
+  "order": 80,
+  "summary": "The worst blast radius isn't another app pod - it's the cluster's own control plane. Use a GlobalNetworkPolicy to lock the etcd datastore down to the kube-apiserver, so no application pod can ever reach the cluster's crown jewels, and learn where HostEndpoints take this further."
+}

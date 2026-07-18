@@ -1,0 +1,34 @@
+# Lesson 92 - a deliberately plain policy, so the Windows (HNS) tab is easy to read.
+#
+# One GlobalNetworkPolicy over every namespaced pod: default-deny, with a single
+# Allow carve-out (frontend -> backend on TCP 8080). Nothing here uses a negated
+# match, a named port, or ICMP, so the HNS renderer reproduces this rule-for-rule
+# - the whole point of THIS lesson is that a portable policy lands intact on
+# Windows. Lesson 94 is where we break that on purpose.
+#
+# Read it on Windows: open the tab with the Windows logo (the "hns" dataplane
+# view). Felix flattens tiers, rewrites priorities, and INLINES addresses (HNS
+# has no named IP sets), IPv4 only.
+---
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: frontend-to-backend
+spec:
+  order: 100
+  namespaceSelector: has(projectcalico.org/name)
+  types: [Ingress, Egress]
+  ingress:
+    - action: Allow
+      protocol: TCP
+      source:
+        selector: 'app == "frontend"'
+      destination:
+        selector: 'app == "backend"'
+        ports: [8080]
+  egress:
+    - action: Allow
+      protocol: TCP
+      destination:
+        selector: 'app == "backend"'
+        ports: [8080]

@@ -1,0 +1,8 @@
+{
+  "name": "ptee-windows-hns-tab",
+  "flavor": "calico",
+  "title": "Policies on Windows: read the HNS tab",
+  "track": "Windows (HNS)",
+  "order": 92,
+  "summary": "The same Calico policy runs on Windows nodes, but the dataplane is different - Felix installs an HNS ACL list, not iptables. Load a policy, open the Windows (HNS) tab, and learn to read the flattened, IPv4-only ACL rules Felix hands the Host Networking Service."
+}

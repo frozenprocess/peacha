@@ -1,0 +1,70 @@
+# Lesson 35 - the ClusterNetworkPolicy Baseline tier, the cluster-wide
+# default-deny FLOOR. It builds directly on the Admin lesson and closes the gap
+# that lesson ended on: a flow Admin Passed that no NetworkPolicy covered was
+# defaulting to ALLOW. The Baseline tier makes the default DENY.
+#
+# Tiers are evaluated Admin -> NetworkPolicy -> Baseline, first to decide wins:
+#
+#     Admin     (CNP, tier: Admin)     - Pass intra-prod, Deny the rest (final).
+#     NetworkPolicy (app team)         - prod/backend admits prod/frontend.
+#     Baseline  (CNP, tier: Baseline)  - deny-all, subject = all namespaces.  <-- NEW
+#
+# Because Baseline is the lowest tier, it only votes on flows the tiers above it
+# left undecided - so it can't override the app team's Accept, it just catches
+# everything that fell through. subject: namespaces {} makes it cluster-wide, so
+# it locks down dev as well as prod.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-allow-frontend
+  namespace: prod
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+---
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
+metadata:
+  name: prod-admin-pass-prod-deny-rest
+spec:
+  tier: Admin
+  priority: 10
+  subject:
+    namespaces:
+      matchLabels:
+        env: prod
+  ingress:
+    - name: pass-from-prod
+      action: Pass
+      from:
+        - namespaces:
+            matchLabels:
+              env: prod
+    - name: deny-everything-else
+      action: Deny
+      from:
+        - namespaces: {}
+---
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
+metadata:
+  name: cluster-baseline-deny-ingress
+spec:
+  tier: Baseline
+  priority: 1000
+  subject:
+    namespaces: {}
+  ingress:
+    - name: deny-all
+      action: Deny
+      from:
+        - namespaces: {}

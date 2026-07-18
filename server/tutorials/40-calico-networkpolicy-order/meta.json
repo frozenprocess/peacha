@@ -1,0 +1,8 @@
+{
+  "name": "ptee-calico-networkpolicy-order",
+  "flavor": "calico",
+  "title": "Calico NetworkPolicy: a real Deny and an order field",
+  "track": "Policy types, end to end",
+  "order": 40,
+  "summary": "The namespaced Calico NetworkPolicy looks like a KNP but adds the two things KNP lacked: an explicit Deny action and a spec.order that ranks policies. See it cooperate with a plain Kubernetes NetworkPolicy - which Calico ranks at order 1000 - in the same namespace."
+}

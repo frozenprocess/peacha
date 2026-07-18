@@ -1,0 +1,63 @@
+{
+  "_meta": {
+    "plugin": "k8s",
+    "context": "<current>",
+    "generated_at": "2026-06-01T12:43:50Z",
+    "regenerate_with": "python3 snapshot-cni.py --plugin k8s > workloads/k8s-snapshot.json"
+  },
+  "namespaces": [
+    {
+      "name": "kube-system",
+      "labels": {
+        "kubernetes.io/metadata.name": "kube-system"
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "name": "k3d-calico-demo-agent-0",
+      "ip": "172.20.0.3",
+      "interfaceName": "eth0",
+      "labels": {
+        "beta.kubernetes.io/arch": "amd64",
+        "beta.kubernetes.io/instance-type": "k3s",
+        "beta.kubernetes.io/os": "linux",
+        "kubernetes.io/arch": "amd64",
+        "kubernetes.io/hostname": "k3d-calico-demo-agent-0",
+        "kubernetes.io/os": "linux",
+        "node.kubernetes.io/instance-type": "k3s"
+      }
+    },
+    {
+      "name": "k3d-calico-demo-server-0",
+      "ip": "172.20.0.2",
+      "interfaceName": "eth0",
+      "labels": {
+        "beta.kubernetes.io/arch": "amd64",
+        "beta.kubernetes.io/instance-type": "k3s",
+        "beta.kubernetes.io/os": "linux",
+        "kubernetes.io/arch": "amd64",
+        "kubernetes.io/hostname": "k3d-calico-demo-server-0",
+        "kubernetes.io/os": "linux",
+        "node-role.kubernetes.io/control-plane": "true",
+        "node-role.kubernetes.io/master": "true",
+        "node.kubernetes.io/instance-type": "k3s"
+      }
+    }
+  ],
+  "endpoints": [
+    {
+      "id": "kube-system/coredns",
+      "namespace": "kube-system",
+      "app": "coredns",
+      "pod": "coredns-ccb96694c-znxnv",
+      "ip": "192.168.121.131",
+      "labels": {
+        "k8s-app": "kube-dns",
+        "pod-template-hash": "ccb96694c"
+      },
+      "probe_source": false,
+      "node": "k3d-calico-demo-agent-0"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "ptee-knp-across-namespaces",
+  "flavor": "calico",
+  "title": "Kubernetes NetworkPolicy across namespaces - and its ceiling",
+  "track": "Kubernetes Network Policy",
+  "order": 20,
+  "summary": "Reach across namespaces with a namespaceSelector, learn the AND-within-a-peer vs OR-across-peers rule and matchExpressions set logic - then hit the three things a Kubernetes NetworkPolicy simply cannot do, which is why the rest of this track exists."
+}

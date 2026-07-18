@@ -1,0 +1,32 @@
+# Lesson 70 - selectors say WHO, protocol+ports say WHAT. So far every probe
+# used TCP/8080, so the selector was the only thing that mattered. Real rules
+# also match the protocol and, when listed, the destination ports. A rule fires
+# only when ALL of these hold at once:
+#
+#   - source/destination selectors match (who), AND
+#   - protocol matches (TCP/UDP/ICMP/SCTP or a number), AND
+#   - if the rule lists destination.ports, the packet's port is one of them.
+#
+# The widening gotchas:
+#   - omit `protocol` and the rule matches EVERY protocol;
+#   - omit `ports` and it matches EVERY port on that protocol.
+#
+# Each app pod here runs a TCP/HTTP server on 8080 AND a UDP echo server on 8081.
+# This policy admits ONLY TCP to backend, and only on the 8080-8090 range. The
+# UDP echo port (8081) and every other TCP port are closed by the implicit
+# default-deny. Ports may be a single value (8080), a list ([8080, 8443]), or an
+# inclusive RANGE written as a string ("8080:8090").
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: backend-tcp-http-only
+spec:
+  selector: env == 'prod' && app == 'backend'
+  types:
+    - Ingress
+  ingress:
+    - action: Allow
+      protocol: TCP
+      destination:
+        ports:
+          - "8080:8090"

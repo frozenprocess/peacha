@@ -1,0 +1,12 @@
+{
+  "name": "ptee-prednat-donottrack-external",
+  "flavor": "calico",
+  "title": "Guard the front door: preDNAT and doNotTrack",
+  "track": "Policy types, end to end",
+  "order": 84,
+  "summary": "Two host-firewall switches built for the outside world. preDNAT blocks an external source at the node's edge *before* kube-proxy rewrites the destination - so you match the real client, not a service VIP. doNotTrack runs statelessly in the raw table for host-networked servers. Both key off the source CIDR, which survives DNAT untouched.",
+  "external_endpoints": [
+    { "id": "world/blocked", "ip": "203.0.113.5", "labels": { "scope": "internet" } },
+    { "id": "world/allowed", "ip": "198.51.100.7", "labels": { "scope": "internet" } }
+  ]
+}
