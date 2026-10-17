@@ -5,6 +5,8 @@
 // scaffolding. Categorisation is purely structural (chain-name prefixes for
 // iptables, polprog section comments for bpf), so no engine changes needed.
 
+import type { BPFEntity, BPFICMP, BPFIPSet, BPFPortRange, BPFProfile, BPFRule, BPFTier } from './api';
+
 export type Origin = 'policy' | 'profile' | 'endpoint' | 'dispatch' | 'static';
 
 export const ORIGIN_LABEL: Record<Origin, string> = {
@@ -54,10 +56,8 @@ export interface ColoredLine {
 // reliable. A few inter-section plumbing lines may be attributed to the
 // preceding section; the coloring is a navigation aid, not a proof.
 //
-// Both render modes are handled: the verbose disassembly keys off the "  ; "
-// instruction comments and footer labels; the concise tier→policy→rule tree
-// keys off the line headers (Tier:/Policy:/Rule:/Profile:/…). The two line
-// shapes don't collide, so a single pass covers both.
+// Only the verbose disassembly is text; the concise tree arrives structured
+// and is colored by bpfTreeLines instead.
 export function categorizeBPF(lines: string[]): ColoredLine[] {
   let cur: Origin = 'endpoint';
   let inTier = false;
@@ -65,15 +65,6 @@ export function categorizeBPF(lines: string[]): ColoredLine[] {
   for (const text of lines) {
     const comment = text.startsWith('  ; ') ? text.slice(4) : '';
     const label = /^[A-Za-z_][\w]*:$/.test(text.trim()) ? text.trim().slice(0, -1) : '';
-
-    // Concise tree headers: a Tier owns policy rules; a Profile owns profile
-    // rules; the Policy:/Rule:/Match:/End … lines inherit the current owner.
-    const head = text.trim();
-    if (head.startsWith('Tier:') || head.startsWith('End Tier:')) {
-      cur = 'policy';
-    } else if (head.startsWith('Profile:')) {
-      cur = 'profile';
-    }
 
     if (comment.startsWith('Start of tier ')) {
       cur = 'policy';
@@ -92,6 +83,67 @@ export function categorizeBPF(lines: string[]): ColoredLine[] {
     out.push({ text, origin: cur });
   }
   return out;
+}
+
+// bpfTreeLines flattens the concise tier→policy→rule tree into indented lines,
+// the same shape `telepathy bpf` prints (mirroring `calico-node bpf policy
+// dump`). Tier lines are 'policy', profile lines 'profile'.
+export function bpfTreeLines(tiers: BPFTier[] = [], profiles: BPFProfile[] = []): ColoredLine[] {
+  const out: ColoredLine[] = [];
+  for (const t of tiers) {
+    const push = (text: string) => out.push({ text, origin: 'policy' });
+    push(`Tier: ${t.name}`);
+    for (const p of t.policies ?? []) {
+      const name = p.namespace ? `${p.namespace}/${p.name}` : p.name;
+      push(`  Policy: ${p.kind ? p.kind + ' ' : ''}${name}`);
+      for (const l of bpfRuleLines(p.rules, '    ')) push(l);
+    }
+    if (t.defaultAction) push(`  End Tier: ${t.name}  (action: ${t.defaultAction})`);
+  }
+  for (const p of profiles) {
+    out.push({ text: `Profile: ${p.name}`, origin: 'profile' });
+    for (const l of bpfRuleLines(p.rules, '  ')) out.push({ text: l, origin: 'profile' });
+  }
+  return out;
+}
+
+function bpfRuleLines(rules: BPFRule[] = [], indent: string): string[] {
+  const out: string[] = [];
+  for (const r of rules) {
+    let head = `${indent}Rule: Action: ${r.action}`;
+    if (r.protocol) head += `  Protocol: ${r.protocol}`;
+    if (r.notProtocol) head += `  NotProtocol: ${r.notProtocol}`;
+    if (r.icmp) head += `  ICMP: ${icmpText(r.icmp)}`;
+    if (r.notICMP) head += `  NotICMP: ${icmpText(r.notICMP)}`;
+    out.push(head);
+    const src = entityText(r.source);
+    if (src) out.push(`${indent}  Source:${src}`);
+    const dst = entityText(r.destination);
+    if (dst) out.push(`${indent}  Destination:${dst}`);
+  }
+  return out;
+}
+
+const icmpText = (i: BPFICMP) => (i.code !== undefined ? `type=${i.type} code=${i.code}` : `type=${i.type}`);
+
+const portsText = (ps: BPFPortRange[]) => ps.map((p) => (p.first === p.last ? `${p.first}` : `${p.first}-${p.last}`)).join(',');
+
+// An IP set reads as its resolved members; the synthetic ID is only shown when
+// the request captured none.
+const ipSetText = (s: BPFIPSet) => (s.members?.length ? `{${s.members.join(',')}}` : `ipSet(${s.id})`);
+
+function entityText(e?: BPFEntity): string {
+  if (!e) return '';
+  let s = '';
+  if (e.nets?.length) s += ` nets=${e.nets.join(',')}`;
+  if (e.notNets?.length) s += ` !nets=${e.notNets.join(',')}`;
+  for (const set of e.ipSets ?? []) s += ` ${ipSetText(set)}`;
+  for (const set of e.notIPSets ?? []) s += ` !${ipSetText(set)}`;
+  if (e.ports?.length) s += ` ports=${portsText(e.ports)}`;
+  if (e.notPorts?.length) s += ` !ports=${portsText(e.notPorts)}`;
+  if (e.namedPorts?.length) s += ` namedPorts=${e.namedPorts.join(',')}`;
+  if (e.notNamedPorts?.length) s += ` !namedPorts=${e.notNamedPorts.join(',')}`;
+  return s;
 }
 
 export interface Segment {

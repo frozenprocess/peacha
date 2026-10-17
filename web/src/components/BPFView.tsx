@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BPFProgram, BPFRenderOptions, BPFResponse, EditorRequest, renderBPF } from '../api';
-import { categorizeBPF, Origin } from '../coloring';
+import { bpfTreeLines, categorizeBPF, ColoredLine, Origin } from '../coloring';
 import { EndpointFilter } from './EndpointFilter';
 import { Legend } from './Legend';
 
@@ -143,7 +143,7 @@ function ProgramBlock({ prog, verbose }: { prog: BPFProgram; verbose: boolean })
         <span className={'bpf-dir bpf-dir-' + prog.direction}>{prog.direction}</span>
         <span className="bpf-fam">IPv{prog.ipVersion}</span>
         <span className="muted bpf-meta">
-          {prog.lines.length} {verbose ? 'insns' : 'lines'}{prog.subPrograms > 1 ? ` · ${prog.subPrograms} sub-progs` : ''}
+          {prog.instructions ?? 0} insns{(prog.subPrograms ?? 0) > 1 ? ` · ${prog.subPrograms} sub-progs` : ''}
           {prog.error ? ' · error' : ''}
         </span>
       </button>
@@ -152,7 +152,7 @@ function ProgramBlock({ prog, verbose }: { prog: BPFProgram; verbose: boolean })
           <pre className="bpf-asm error">{prog.error}</pre>
         ) : (
           <pre className="bpf-asm">
-            {categorizeBPF(prog.lines).map((cl, i) => (
+            {programLines(prog).map((cl, i) => (
               <div key={i} className={'asm-line origin-' + cl.origin}>
                 {cl.text || ' '}
               </div>
@@ -170,7 +170,13 @@ function bpfOrigins(resp: BPFResponse | null): Origin[] {
   const out: Origin[] = [];
   for (const p of resp.programs) {
     if (p.error) continue;
-    for (const cl of categorizeBPF(p.lines)) out.push(cl.origin);
+    for (const cl of programLines(p)) out.push(cl.origin);
   }
   return out;
+}
+
+// programLines colors whichever form the engine returned: the verbose
+// disassembly as text lines, or the concise tree as structured tiers/profiles.
+function programLines(p: BPFProgram): ColoredLine[] {
+  return p.lines?.length ? categorizeBPF(p.lines) : bpfTreeLines(p.tiers, p.profiles);
 }

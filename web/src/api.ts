@@ -380,14 +380,76 @@ export interface Capability {
 
 // --- eBPF policy-program render (mirror of engine.BPFProgram/BPFResponse) ---
 
+// The concise render is structured (tiers/profiles); only the verbose
+// disassembly comes back as text lines. Go omitempty drops whichever is unused.
 export interface BPFProgram {
   endpoint: string;
   interface: string;
   direction: string;
   ipVersion: number;
-  subPrograms: number;
-  lines: string[];
+  subPrograms?: number;
+  instructions?: number; // total eBPF instructions across sub-programs
+  tiers?: BPFTier[];
+  profiles?: BPFProfile[];
+  lines?: string[]; // verbose only
   error?: string;
+}
+
+export interface BPFTier {
+  name: string;
+  defaultAction?: string; // "deny" | "pass"
+  policies?: BPFPolicy[];
+}
+
+export interface BPFPolicy {
+  kind?: string;
+  namespace?: string; // empty for cluster-scoped kinds
+  name: string;
+  rules?: BPFRule[];
+}
+
+/** A workload's default profile, evaluated after every tier passes. */
+export interface BPFProfile {
+  name: string;
+  rules?: BPFRule[];
+}
+
+export interface BPFRule {
+  action: string;
+  matchID: number; // uint64 hash: exceeds 2^53, so lossy in JS - don't key on it
+  protocol?: string;
+  notProtocol?: string;
+  source?: BPFEntity;
+  destination?: BPFEntity;
+  icmp?: BPFICMP;
+  notICMP?: BPFICMP;
+}
+
+export interface BPFEntity {
+  nets?: string[];
+  notNets?: string[];
+  ipSets?: BPFIPSet[];
+  notIPSets?: BPFIPSet[];
+  ports?: BPFPortRange[];
+  notPorts?: BPFPortRange[];
+  namedPorts?: string[];
+  notNamedPorts?: string[];
+}
+
+/** An IP set's ID plus the members the calc graph resolved it to. */
+export interface BPFIPSet {
+  id: string;
+  members?: string[];
+}
+
+export interface BPFPortRange {
+  first: number;
+  last: number; // == first for a single port
+}
+
+export interface BPFICMP {
+  type: number;
+  code?: number;
 }
 
 export interface BPFResponse {
