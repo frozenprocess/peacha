@@ -183,13 +183,14 @@ exams-sync::
 	    || echo ">> no access to $(EXAMS_REPO) - building with 0 exams (see server/exams/README.md)"; \
 	fi
 	@mkdir -p server/exams
-	@find server/exams -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} +
+	@find server/exams -mindepth 1 -maxdepth 1 ! -name README.md -exec rm -rf {} +
 	@[ -d $(EXAMS_DIR) ] && find $(EXAMS_DIR) -mindepth 1 -maxdepth 1 -type d ! -name .git -exec cp -r {} server/exams/ \; 2>/dev/null || true
 	@echo "synced server/exams ($$(find server/exams -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ') exams)"
 
 build-web:
 	@command -v node >/dev/null || (echo "node not installed - see README" && exit 1)
 	cd web && npm install --silent && npm run build
+	@touch $(DIST)/.placeholder # vite's emptyOutDir wipes it
 	@echo "built SPA into $(DIST)"
 
 # Diff the editor's hand-curated policy schemas against the vendored Calico CRD
@@ -228,8 +229,9 @@ publish:
 
 clean:
 	rm -f $(BIN)
-	find $(DIST) -mindepth 1 ! -name .placeholder -delete
-	rm -rf server/exams
+	@mkdir -p $(DIST) server/exams
+	find $(DIST) -mindepth 1 -maxdepth 1 ! -name .placeholder -exec rm -rf {} +
+	find server/exams -mindepth 1 -maxdepth 1 ! -name README.md -exec rm -rf {} +
 
 distclean: clean
 	git submodule deinit -f third_party/telepathy third_party/calico 2>/dev/null || true
