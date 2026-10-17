@@ -1864,13 +1864,7 @@ export function App() {
 }
 
 // CapabilitiesModal lists what the engine honours. Unsupported features are
-// flagged so a green matrix for one of them isn't taken at face value; the
-// Notes carry the caveats (e.g. named ports deny, FQDN needs the DNS stub). A
-// footer shows the build versions of the components behind the evaluation so a
-// reported behaviour can be pinned to a specific engine / Calico build.
-//
-// Rendered as a centered modal over a dimmed backdrop: click-outside or Escape
-// dismisses it (the toolbar button also toggles it).
+// flagged so a green matrix for one of them isn't taken at face value.
 function CapabilitiesModal({
   capabilities,
   versions,
