@@ -67,14 +67,14 @@ EXAMS_DIR  := $(REPO_ROOT)/third_party/exams
 # replace directives are not transitive, so this repo's go.mod mirrors them by
 # hand (see the replace block at the bottom of go.mod). After switching you MUST
 # re-sync that block to match third_party/calico/go.mod or the build will fail.
-CALICO_BRANCH ?= release-v3.32
+CALICO_BRANCH ?= release-v3.33
 
 # Which frozenprocess/telepathy ref the third_party/telepathy submodule is
 # checked out to. Telepathy has no branch pin in .gitmodules, so this defaults
 # to its remote default branch. Override on the CLI, then run `make submodules`
 # to actually switch the checkout:
 #   make submodules TELEPATHY_BRANCH=main && make build
-TELEPATHY_BRANCH ?= main
+TELEPATHY_BRANCH ?= v0.2.0
 
 # Component versions stamped into the binary (editor --version). The editor
 # value is this repo's `git describe`; engine + Calico come from their submodule
@@ -166,6 +166,7 @@ dev-auth: $(SUBMODULE_MARKER)
 build: $(SUBMODULE_MARKER) build-web build-go
 
 build-go: $(SUBMODULE_MARKER)
+	@mkdir -p $(DIST) && touch $(DIST)/.placeholder # //go:embed all:dist needs >=1 file
 	$(GO) build -ldflags "$(VERSION_LDFLAGS)" -o $(BIN) ./cmd/editor
 	@echo "built $(BIN)"
 
@@ -231,6 +232,7 @@ clean:
 	rm -f $(BIN)
 	@mkdir -p $(DIST) server/exams
 	find $(DIST) -mindepth 1 -maxdepth 1 ! -name .placeholder -exec rm -rf {} +
+	@touch $(DIST)/.placeholder
 	find server/exams -mindepth 1 -maxdepth 1 ! -name README.md -exec rm -rf {} +
 
 distclean: clean

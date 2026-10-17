@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run gen:crd && tsc -b && vite build",
+    "postbuild": "node -e \"require('fs').writeFileSync('../server/dist/.placeholder', '')\"",
     "preview": "vite preview",
     "gen:crd": "node scripts/gen-policy-schema.ts",
     "check:crd": "node scripts/check-crd-drift.ts",

@@ -15,7 +15,7 @@ RUN npm run build
 # -> /src/server/dist (index.html + assets)
 
 # ---- Stage 2: build the static Go binary -------------------------------------
-FROM golang:1.26 AS build
+FROM golang:1.27 AS build
 # Pure-Go build: cgo off selects felix's syscall stubs and drops the libbpf C
 # dep (we only assemble eBPF programs, never make BPF syscalls). The resulting
 # binary is fully static, so it runs on scratch. GOTOOLCHAIN=auto lets the

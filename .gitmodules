@@ -4,4 +4,4 @@
 [submodule "third_party/calico"]
 	path = third_party/calico
 	url = https://github.com/projectcalico/calico.git
-	branch = release-v3.32
+	branch = release-v3.33

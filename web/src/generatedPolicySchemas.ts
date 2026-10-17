@@ -54,8 +54,11 @@ export const generatedSchemas = {
         "additionalProperties": false,
         "properties": {
           "egress": {
+            "description": "The ordered set of egress rules.  Each rule contains a set of packet match criteria and\na corresponding action to apply. Limited to 1024 rules per policy.",
+            "maxItems": 1024,
             "type": "array",
             "items": {
+              "description": "A Rule encapsulates a set of match criteria and an action.  Both selector-based security Policy\nand security Profiles reference rules - separated out as a list of rules for both\ningress and egress packet matching.\n\nEach positive match criteria has a negated version, prefixed with \"Not\". All the match\ncriteria within a rule must be satisfied for a packet to match. A single rule can contain\nthe positive and negative version of a match and both must be satisfied for the rule to match.",
               "required": [
                 "action"
               ],
@@ -73,27 +76,34 @@ export const generatedSchemas = {
                   "description": "What to do with matching traffic."
                 },
                 "destination": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -104,13 +114,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -121,36 +134,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -162,14 +183,15 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 },
                 "http": {
+                  "description": "HTTP match clause (ingress only).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "methods": {
+                      "description": "Methods is an optional field that restricts the rule to apply only to HTTP requests that use one of the listed\nHTTP Methods (e.g. GET, PUT, etc.)\nMultiple methods are OR'd together.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
@@ -177,9 +199,11 @@ export const generatedSchemas = {
                       }
                     },
                     "paths": {
+                      "description": "Paths is an optional field that restricts the rule to apply to HTTP requests that use one of the listed\nHTTP Paths.\nMultiple paths are OR'd together.\ne.g:\n- exact: /foo\n- prefix: /bar\nNOTE: Each entry may ONLY specify either a `exact` or a `prefix` match. The validator will check for it.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
+                        "description": "HTTPPath specifies an HTTP path to match. It may be either of the form:\nexact: <path>: which matches the path exactly or\nprefix: <path-prefix>: which matches the path prefix",
                         "type": "object",
                         "additionalProperties": false,
                         "properties": {
@@ -194,58 +218,62 @@ export const generatedSchemas = {
                         }
                       }
                     }
-                  },
-                  "description": "HTTP match clause (ingress only)."
+                  }
                 },
                 "icmp": {
+                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
                     }
-                  },
-                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6)."
+                  }
                 },
                 "ipVersion": {
+                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only.",
                   "enum": [
                     4,
                     6
                   ],
-                  "type": "integer",
-                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only."
+                  "type": "integer"
                 },
                 "metadata": {
+                  "description": "Per-rule metadata (does not affect matching).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "annotations": {
+                      "description": "Free-form annotations attached to this rule.",
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      },
-                      "description": "Free-form annotations attached to this rule."
+                      }
                     }
-                  },
-                  "description": "Per-rule metadata (does not affect matching)."
+                  }
                 },
                 "notICMP": {
+                  "description": "NotICMP is the negated version of the ICMP field.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
@@ -293,27 +321,34 @@ export const generatedSchemas = {
                   "description": "Protocol name or IP protocol number."
                 },
                 "source": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -324,13 +359,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -341,36 +379,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -382,15 +428,17 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 }
               }
             }
           },
           "ingress": {
+            "description": "The ordered set of ingress rules.  Each rule contains a set of packet match criteria and\na corresponding action to apply. Limited to 1024 rules per policy.",
+            "maxItems": 1024,
             "type": "array",
             "items": {
+              "description": "A Rule encapsulates a set of match criteria and an action.  Both selector-based security Policy\nand security Profiles reference rules - separated out as a list of rules for both\ningress and egress packet matching.\n\nEach positive match criteria has a negated version, prefixed with \"Not\". All the match\ncriteria within a rule must be satisfied for a packet to match. A single rule can contain\nthe positive and negative version of a match and both must be satisfied for the rule to match.",
               "required": [
                 "action"
               ],
@@ -408,27 +456,34 @@ export const generatedSchemas = {
                   "description": "What to do with matching traffic."
                 },
                 "destination": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -439,13 +494,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -456,36 +514,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -497,14 +563,15 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 },
                 "http": {
+                  "description": "HTTP match clause (ingress only).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "methods": {
+                      "description": "Methods is an optional field that restricts the rule to apply only to HTTP requests that use one of the listed\nHTTP Methods (e.g. GET, PUT, etc.)\nMultiple methods are OR'd together.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
@@ -512,9 +579,11 @@ export const generatedSchemas = {
                       }
                     },
                     "paths": {
+                      "description": "Paths is an optional field that restricts the rule to apply to HTTP requests that use one of the listed\nHTTP Paths.\nMultiple paths are OR'd together.\ne.g:\n- exact: /foo\n- prefix: /bar\nNOTE: Each entry may ONLY specify either a `exact` or a `prefix` match. The validator will check for it.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
+                        "description": "HTTPPath specifies an HTTP path to match. It may be either of the form:\nexact: <path>: which matches the path exactly or\nprefix: <path-prefix>: which matches the path prefix",
                         "type": "object",
                         "additionalProperties": false,
                         "properties": {
@@ -529,58 +598,62 @@ export const generatedSchemas = {
                         }
                       }
                     }
-                  },
-                  "description": "HTTP match clause (ingress only)."
+                  }
                 },
                 "icmp": {
+                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
                     }
-                  },
-                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6)."
+                  }
                 },
                 "ipVersion": {
+                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only.",
                   "enum": [
                     4,
                     6
                   ],
-                  "type": "integer",
-                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only."
+                  "type": "integer"
                 },
                 "metadata": {
+                  "description": "Per-rule metadata (does not affect matching).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "annotations": {
+                      "description": "Free-form annotations attached to this rule.",
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      },
-                      "description": "Free-form annotations attached to this rule."
+                      }
                     }
-                  },
-                  "description": "Per-rule metadata (does not affect matching)."
+                  }
                 },
                 "notICMP": {
+                  "description": "NotICMP is the negated version of the ICMP field.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
@@ -628,27 +701,34 @@ export const generatedSchemas = {
                   "description": "Protocol name or IP protocol number."
                 },
                 "source": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -659,13 +739,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -676,36 +759,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -717,49 +808,53 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 }
               }
             }
           },
           "order": {
-            "type": "number",
-            "description": "Lower order = higher precedence."
+            "description": "Lower order = higher precedence.",
+            "type": "number"
           },
           "performanceHints": {
+            "description": "Opt-in performance tweaks. AssumeNeededOnEveryNode programs the policy on every node even if no local endpoint matches yet.",
             "type": "array",
             "items": {
               "enum": [
                 "AssumeNeededOnEveryNode"
               ],
               "type": "string"
-            },
-            "description": "Opt-in performance tweaks. AssumeNeededOnEveryNode programs the policy on every node even if no local endpoint matches yet."
+            }
           },
           "selector": {
-            "type": "string",
-            "description": "Endpoints this policy applies to, e.g. all() or app == 'db'."
+            "description": "Endpoints this policy applies to, e.g. all() or app == 'db'.",
+            "maxLength": 1024,
+            "type": "string"
           },
           "serviceAccountSelector": {
+            "description": "ServiceAccountSelector is an optional field for an expression used to select a pod based on service accounts.",
+            "maxLength": 1024,
             "type": "string"
           },
           "tier": {
             "default": "default",
+            "description": "The name of the tier that this policy belongs to.  If this is omitted, the default\ntier (name is \"default\") is assumed.  The specified tier must exist in order to create\nsecurity policies within the tier, the \"default\" tier is created automatically if it\ndoes not exist, this means for deployments requiring only a single Tier, the tier name\nmay be omitted on all policy management requests.",
             "type": "string"
           },
           "types": {
+            "description": "Directions governed. Inferred from ingress/egress if omitted.",
             "maxItems": 2,
             "minItems": 1,
             "type": "array",
             "items": {
+              "description": "PolicyType enumerates the possible values of the PolicySpec Types field.",
               "enum": [
                 "Ingress",
                 "Egress"
               ],
               "type": "string"
-            },
-            "description": "Directions governed. Inferred from ingress/egress if omitted."
+            }
           }
         }
       }
@@ -812,15 +907,19 @@ export const generatedSchemas = {
         "additionalProperties": false,
         "properties": {
           "applyOnForward": {
-            "type": "boolean",
-            "description": "Apply to forwarded traffic (host endpoints)."
+            "description": "Apply to forwarded traffic (host endpoints).",
+            "type": "boolean"
           },
           "doNotTrack": {
+            "description": "DoNotTrack indicates whether packets matched by the rules in this policy should go through\nthe data plane's connection tracking, such as Linux conntrack.  If True, the rules in\nthis policy are applied before any data plane connection tracking, and packets allowed by\nthis policy are marked as not to be tracked. Requires ApplyOnForward to be true.",
             "type": "boolean"
           },
           "egress": {
+            "description": "The ordered set of egress rules.  Each rule contains a set of packet match criteria and\na corresponding action to apply. Limited to 1024 rules per policy.",
+            "maxItems": 1024,
             "type": "array",
             "items": {
+              "description": "A Rule encapsulates a set of match criteria and an action.  Both selector-based security Policy\nand security Profiles reference rules - separated out as a list of rules for both\ningress and egress packet matching.\n\nEach positive match criteria has a negated version, prefixed with \"Not\". All the match\ncriteria within a rule must be satisfied for a packet to match. A single rule can contain\nthe positive and negative version of a match and both must be satisfied for the rule to match.",
               "required": [
                 "action"
               ],
@@ -838,27 +937,34 @@ export const generatedSchemas = {
                   "description": "What to do with matching traffic."
                 },
                 "destination": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -869,13 +975,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -886,36 +995,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -927,14 +1044,15 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 },
                 "http": {
+                  "description": "HTTP match clause (ingress only).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "methods": {
+                      "description": "Methods is an optional field that restricts the rule to apply only to HTTP requests that use one of the listed\nHTTP Methods (e.g. GET, PUT, etc.)\nMultiple methods are OR'd together.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
@@ -942,9 +1060,11 @@ export const generatedSchemas = {
                       }
                     },
                     "paths": {
+                      "description": "Paths is an optional field that restricts the rule to apply to HTTP requests that use one of the listed\nHTTP Paths.\nMultiple paths are OR'd together.\ne.g:\n- exact: /foo\n- prefix: /bar\nNOTE: Each entry may ONLY specify either a `exact` or a `prefix` match. The validator will check for it.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
+                        "description": "HTTPPath specifies an HTTP path to match. It may be either of the form:\nexact: <path>: which matches the path exactly or\nprefix: <path-prefix>: which matches the path prefix",
                         "type": "object",
                         "additionalProperties": false,
                         "properties": {
@@ -959,58 +1079,62 @@ export const generatedSchemas = {
                         }
                       }
                     }
-                  },
-                  "description": "HTTP match clause (ingress only)."
+                  }
                 },
                 "icmp": {
+                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
                     }
-                  },
-                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6)."
+                  }
                 },
                 "ipVersion": {
+                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only.",
                   "enum": [
                     4,
                     6
                   ],
-                  "type": "integer",
-                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only."
+                  "type": "integer"
                 },
                 "metadata": {
+                  "description": "Per-rule metadata (does not affect matching).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "annotations": {
+                      "description": "Free-form annotations attached to this rule.",
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      },
-                      "description": "Free-form annotations attached to this rule."
+                      }
                     }
-                  },
-                  "description": "Per-rule metadata (does not affect matching)."
+                  }
                 },
                 "notICMP": {
+                  "description": "NotICMP is the negated version of the ICMP field.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
@@ -1058,27 +1182,34 @@ export const generatedSchemas = {
                   "description": "Protocol name or IP protocol number."
                 },
                 "source": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -1089,13 +1220,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -1106,36 +1240,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -1147,15 +1289,17 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 }
               }
             }
           },
           "ingress": {
+            "description": "The ordered set of ingress rules.  Each rule contains a set of packet match criteria and\na corresponding action to apply. Limited to 1024 rules per policy.",
+            "maxItems": 1024,
             "type": "array",
             "items": {
+              "description": "A Rule encapsulates a set of match criteria and an action.  Both selector-based security Policy\nand security Profiles reference rules - separated out as a list of rules for both\ningress and egress packet matching.\n\nEach positive match criteria has a negated version, prefixed with \"Not\". All the match\ncriteria within a rule must be satisfied for a packet to match. A single rule can contain\nthe positive and negative version of a match and both must be satisfied for the rule to match.",
               "required": [
                 "action"
               ],
@@ -1173,27 +1317,34 @@ export const generatedSchemas = {
                   "description": "What to do with matching traffic."
                 },
                 "destination": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -1204,13 +1355,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -1221,36 +1375,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -1262,14 +1424,15 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 },
                 "http": {
+                  "description": "HTTP match clause (ingress only).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "methods": {
+                      "description": "Methods is an optional field that restricts the rule to apply only to HTTP requests that use one of the listed\nHTTP Methods (e.g. GET, PUT, etc.)\nMultiple methods are OR'd together.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
@@ -1277,9 +1440,11 @@ export const generatedSchemas = {
                       }
                     },
                     "paths": {
+                      "description": "Paths is an optional field that restricts the rule to apply to HTTP requests that use one of the listed\nHTTP Paths.\nMultiple paths are OR'd together.\ne.g:\n- exact: /foo\n- prefix: /bar\nNOTE: Each entry may ONLY specify either a `exact` or a `prefix` match. The validator will check for it.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
+                        "description": "HTTPPath specifies an HTTP path to match. It may be either of the form:\nexact: <path>: which matches the path exactly or\nprefix: <path-prefix>: which matches the path prefix",
                         "type": "object",
                         "additionalProperties": false,
                         "properties": {
@@ -1294,58 +1459,62 @@ export const generatedSchemas = {
                         }
                       }
                     }
-                  },
-                  "description": "HTTP match clause (ingress only)."
+                  }
                 },
                 "icmp": {
+                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
                     }
-                  },
-                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6)."
+                  }
                 },
                 "ipVersion": {
+                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only.",
                   "enum": [
                     4,
                     6
                   ],
-                  "type": "integer",
-                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only."
+                  "type": "integer"
                 },
                 "metadata": {
+                  "description": "Per-rule metadata (does not affect matching).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "annotations": {
+                      "description": "Free-form annotations attached to this rule.",
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      },
-                      "description": "Free-form annotations attached to this rule."
+                      }
                     }
-                  },
-                  "description": "Per-rule metadata (does not affect matching)."
+                  }
                 },
                 "notICMP": {
+                  "description": "NotICMP is the negated version of the ICMP field.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
@@ -1393,27 +1562,34 @@ export const generatedSchemas = {
                   "description": "Protocol name or IP protocol number."
                 },
                 "source": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -1424,13 +1600,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -1441,36 +1620,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -1482,56 +1669,62 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 }
               }
             }
           },
           "namespaceSelector": {
-            "type": "string",
-            "description": "Restrict which namespaces this applies to."
+            "description": "Restrict which namespaces this applies to.",
+            "maxLength": 1024,
+            "type": "string"
           },
           "order": {
-            "type": "number",
-            "description": "Lower order = higher precedence."
+            "description": "Lower order = higher precedence.",
+            "type": "number"
           },
           "performanceHints": {
+            "description": "Opt-in performance tweaks. AssumeNeededOnEveryNode programs the policy on every node even if no local endpoint matches yet.",
             "type": "array",
             "items": {
               "enum": [
                 "AssumeNeededOnEveryNode"
               ],
               "type": "string"
-            },
-            "description": "Opt-in performance tweaks. AssumeNeededOnEveryNode programs the policy on every node even if no local endpoint matches yet."
+            }
           },
           "preDNAT": {
+            "description": "PreDNAT indicates to apply the rules in this policy before any DNAT.\nRequires ApplyOnForward to be true. Cannot be used with DoNotTrack, and the\npolicy must not contain egress rules.",
             "type": "boolean"
           },
           "selector": {
-            "type": "string",
-            "description": "Endpoints this policy applies to, e.g. all() or app == 'db'."
+            "description": "Endpoints this policy applies to, e.g. all() or app == 'db'.",
+            "maxLength": 1024,
+            "type": "string"
           },
           "serviceAccountSelector": {
+            "description": "ServiceAccountSelector is an optional field for an expression used to select a pod based on service accounts.",
+            "maxLength": 1024,
             "type": "string"
           },
           "tier": {
             "default": "default",
+            "description": "The name of the tier that this policy belongs to.  If this is omitted, the default\ntier (name is \"default\") is assumed.  The specified tier must exist in order to create\nsecurity policies within the tier, the \"default\" tier is created automatically if it\ndoes not exist, this means for deployments requiring only a single Tier, the tier name\nmay be omitted on all policy management requests.",
             "type": "string"
           },
           "types": {
+            "description": "Directions governed. Inferred from ingress/egress if omitted.",
             "maxItems": 2,
             "minItems": 1,
             "type": "array",
             "items": {
+              "description": "PolicyType enumerates the possible values of the PolicySpec Types field.",
               "enum": [
                 "Ingress",
                 "Egress"
               ],
               "type": "string"
-            },
-            "description": "Directions governed. Inferred from ingress/egress if omitted."
+            }
           }
         }
       }
@@ -1588,8 +1781,11 @@ export const generatedSchemas = {
         "additionalProperties": false,
         "properties": {
           "egress": {
+            "description": "The ordered set of egress rules.  Each rule contains a set of packet match criteria and\na corresponding action to apply. Limited to 1024 rules per policy.",
+            "maxItems": 1024,
             "type": "array",
             "items": {
+              "description": "A Rule encapsulates a set of match criteria and an action.  Both selector-based security Policy\nand security Profiles reference rules - separated out as a list of rules for both\ningress and egress packet matching.\n\nEach positive match criteria has a negated version, prefixed with \"Not\". All the match\ncriteria within a rule must be satisfied for a packet to match. A single rule can contain\nthe positive and negative version of a match and both must be satisfied for the rule to match.",
               "required": [
                 "action"
               ],
@@ -1607,27 +1803,34 @@ export const generatedSchemas = {
                   "description": "What to do with matching traffic."
                 },
                 "destination": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -1638,13 +1841,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -1655,36 +1861,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -1696,14 +1910,15 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 },
                 "http": {
+                  "description": "HTTP match clause (ingress only).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "methods": {
+                      "description": "Methods is an optional field that restricts the rule to apply only to HTTP requests that use one of the listed\nHTTP Methods (e.g. GET, PUT, etc.)\nMultiple methods are OR'd together.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
@@ -1711,9 +1926,11 @@ export const generatedSchemas = {
                       }
                     },
                     "paths": {
+                      "description": "Paths is an optional field that restricts the rule to apply to HTTP requests that use one of the listed\nHTTP Paths.\nMultiple paths are OR'd together.\ne.g:\n- exact: /foo\n- prefix: /bar\nNOTE: Each entry may ONLY specify either a `exact` or a `prefix` match. The validator will check for it.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
+                        "description": "HTTPPath specifies an HTTP path to match. It may be either of the form:\nexact: <path>: which matches the path exactly or\nprefix: <path-prefix>: which matches the path prefix",
                         "type": "object",
                         "additionalProperties": false,
                         "properties": {
@@ -1728,58 +1945,62 @@ export const generatedSchemas = {
                         }
                       }
                     }
-                  },
-                  "description": "HTTP match clause (ingress only)."
+                  }
                 },
                 "icmp": {
+                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
                     }
-                  },
-                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6)."
+                  }
                 },
                 "ipVersion": {
+                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only.",
                   "enum": [
                     4,
                     6
                   ],
-                  "type": "integer",
-                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only."
+                  "type": "integer"
                 },
                 "metadata": {
+                  "description": "Per-rule metadata (does not affect matching).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "annotations": {
+                      "description": "Free-form annotations attached to this rule.",
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      },
-                      "description": "Free-form annotations attached to this rule."
+                      }
                     }
-                  },
-                  "description": "Per-rule metadata (does not affect matching)."
+                  }
                 },
                 "notICMP": {
+                  "description": "NotICMP is the negated version of the ICMP field.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
@@ -1827,27 +2048,34 @@ export const generatedSchemas = {
                   "description": "Protocol name or IP protocol number."
                 },
                 "source": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -1858,13 +2086,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -1875,36 +2106,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -1916,15 +2155,17 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 }
               }
             }
           },
           "ingress": {
+            "description": "The ordered set of ingress rules.  Each rule contains a set of packet match criteria and\na corresponding action to apply. Limited to 1024 rules per policy.",
+            "maxItems": 1024,
             "type": "array",
             "items": {
+              "description": "A Rule encapsulates a set of match criteria and an action.  Both selector-based security Policy\nand security Profiles reference rules - separated out as a list of rules for both\ningress and egress packet matching.\n\nEach positive match criteria has a negated version, prefixed with \"Not\". All the match\ncriteria within a rule must be satisfied for a packet to match. A single rule can contain\nthe positive and negative version of a match and both must be satisfied for the rule to match.",
               "required": [
                 "action"
               ],
@@ -1942,27 +2183,34 @@ export const generatedSchemas = {
                   "description": "What to do with matching traffic."
                 },
                 "destination": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -1973,13 +2221,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -1990,36 +2241,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -2031,14 +2290,15 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 },
                 "http": {
+                  "description": "HTTP match clause (ingress only).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "methods": {
+                      "description": "Methods is an optional field that restricts the rule to apply only to HTTP requests that use one of the listed\nHTTP Methods (e.g. GET, PUT, etc.)\nMultiple methods are OR'd together.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
@@ -2046,9 +2306,11 @@ export const generatedSchemas = {
                       }
                     },
                     "paths": {
+                      "description": "Paths is an optional field that restricts the rule to apply to HTTP requests that use one of the listed\nHTTP Paths.\nMultiple paths are OR'd together.\ne.g:\n- exact: /foo\n- prefix: /bar\nNOTE: Each entry may ONLY specify either a `exact` or a `prefix` match. The validator will check for it.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
+                        "description": "HTTPPath specifies an HTTP path to match. It may be either of the form:\nexact: <path>: which matches the path exactly or\nprefix: <path-prefix>: which matches the path prefix",
                         "type": "object",
                         "additionalProperties": false,
                         "properties": {
@@ -2063,58 +2325,62 @@ export const generatedSchemas = {
                         }
                       }
                     }
-                  },
-                  "description": "HTTP match clause (ingress only)."
+                  }
                 },
                 "icmp": {
+                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
                     }
-                  },
-                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6)."
+                  }
                 },
                 "ipVersion": {
+                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only.",
                   "enum": [
                     4,
                     6
                   ],
-                  "type": "integer",
-                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only."
+                  "type": "integer"
                 },
                 "metadata": {
+                  "description": "Per-rule metadata (does not affect matching).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "annotations": {
+                      "description": "Free-form annotations attached to this rule.",
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      },
-                      "description": "Free-form annotations attached to this rule."
+                      }
                     }
-                  },
-                  "description": "Per-rule metadata (does not affect matching)."
+                  }
                 },
                 "notICMP": {
+                  "description": "NotICMP is the negated version of the ICMP field.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
@@ -2162,27 +2428,34 @@ export const generatedSchemas = {
                   "description": "Protocol name or IP protocol number."
                 },
                 "source": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -2193,13 +2466,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -2210,36 +2486,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -2251,58 +2535,62 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 }
               }
             }
           },
           "order": {
-            "type": "number",
-            "description": "Lower order = higher precedence."
+            "description": "Lower order = higher precedence.",
+            "type": "number"
           },
           "performanceHints": {
+            "description": "Opt-in performance tweaks. AssumeNeededOnEveryNode programs the policy on every node even if no local endpoint matches yet.",
             "type": "array",
             "items": {
               "enum": [
                 "AssumeNeededOnEveryNode"
               ],
               "type": "string"
-            },
-            "description": "Opt-in performance tweaks. AssumeNeededOnEveryNode programs the policy on every node even if no local endpoint matches yet."
+            }
           },
           "selector": {
-            "type": "string",
-            "description": "Endpoints this policy applies to, e.g. all() or app == 'db'."
+            "description": "Endpoints this policy applies to, e.g. all() or app == 'db'.",
+            "maxLength": 1024,
+            "type": "string"
           },
           "serviceAccountSelector": {
+            "description": "ServiceAccountSelector is an optional field for an expression used to select a pod based on service accounts.",
+            "maxLength": 1024,
             "type": "string"
           },
           "stagedAction": {
             "default": "Set",
+            "description": "Set (preview this policy) or Delete (preview removing it). Defaults to Set.",
             "enum": [
               "Set",
               "Delete"
             ],
-            "type": "string",
-            "description": "Set (preview this policy) or Delete (preview removing it). Defaults to Set."
+            "type": "string"
           },
           "tier": {
             "default": "default",
+            "description": "The name of the tier that this policy belongs to.  If this is omitted, the default\ntier (name is \"default\") is assumed.  The specified tier must exist in order to create\nsecurity policies within the tier, the \"default\" tier is created automatically if it\ndoes not exist, this means for deployments requiring only a single Tier, the tier name\nmay be omitted on all policy management requests.",
             "type": "string"
           },
           "types": {
+            "description": "Directions governed. Inferred from ingress/egress if omitted.",
             "maxItems": 2,
             "minItems": 1,
             "type": "array",
             "items": {
+              "description": "PolicyType enumerates the possible values of the PolicySpec Types field.",
               "enum": [
                 "Ingress",
                 "Egress"
               ],
               "type": "string"
-            },
-            "description": "Directions governed. Inferred from ingress/egress if omitted."
+            }
           }
         }
       }
@@ -2355,15 +2643,19 @@ export const generatedSchemas = {
         "additionalProperties": false,
         "properties": {
           "applyOnForward": {
-            "type": "boolean",
-            "description": "Apply to forwarded traffic (host endpoints)."
+            "description": "Apply to forwarded traffic (host endpoints).",
+            "type": "boolean"
           },
           "doNotTrack": {
+            "description": "DoNotTrack indicates whether packets matched by the rules in this policy should go through\nthe data plane's connection tracking, such as Linux conntrack.  If True, the rules in\nthis policy are applied before any data plane connection tracking, and packets allowed by\nthis policy are marked as not to be tracked.",
             "type": "boolean"
           },
           "egress": {
+            "description": "The ordered set of egress rules.  Each rule contains a set of packet match criteria and\na corresponding action to apply. Limited to 1024 rules per policy.",
+            "maxItems": 1024,
             "type": "array",
             "items": {
+              "description": "A Rule encapsulates a set of match criteria and an action.  Both selector-based security Policy\nand security Profiles reference rules - separated out as a list of rules for both\ningress and egress packet matching.\n\nEach positive match criteria has a negated version, prefixed with \"Not\". All the match\ncriteria within a rule must be satisfied for a packet to match. A single rule can contain\nthe positive and negative version of a match and both must be satisfied for the rule to match.",
               "required": [
                 "action"
               ],
@@ -2381,27 +2673,34 @@ export const generatedSchemas = {
                   "description": "What to do with matching traffic."
                 },
                 "destination": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -2412,13 +2711,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -2429,36 +2731,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -2470,14 +2780,15 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 },
                 "http": {
+                  "description": "HTTP match clause (ingress only).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "methods": {
+                      "description": "Methods is an optional field that restricts the rule to apply only to HTTP requests that use one of the listed\nHTTP Methods (e.g. GET, PUT, etc.)\nMultiple methods are OR'd together.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
@@ -2485,9 +2796,11 @@ export const generatedSchemas = {
                       }
                     },
                     "paths": {
+                      "description": "Paths is an optional field that restricts the rule to apply to HTTP requests that use one of the listed\nHTTP Paths.\nMultiple paths are OR'd together.\ne.g:\n- exact: /foo\n- prefix: /bar\nNOTE: Each entry may ONLY specify either a `exact` or a `prefix` match. The validator will check for it.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
+                        "description": "HTTPPath specifies an HTTP path to match. It may be either of the form:\nexact: <path>: which matches the path exactly or\nprefix: <path-prefix>: which matches the path prefix",
                         "type": "object",
                         "additionalProperties": false,
                         "properties": {
@@ -2502,58 +2815,62 @@ export const generatedSchemas = {
                         }
                       }
                     }
-                  },
-                  "description": "HTTP match clause (ingress only)."
+                  }
                 },
                 "icmp": {
+                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
                     }
-                  },
-                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6)."
+                  }
                 },
                 "ipVersion": {
+                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only.",
                   "enum": [
                     4,
                     6
                   ],
-                  "type": "integer",
-                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only."
+                  "type": "integer"
                 },
                 "metadata": {
+                  "description": "Per-rule metadata (does not affect matching).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "annotations": {
+                      "description": "Free-form annotations attached to this rule.",
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      },
-                      "description": "Free-form annotations attached to this rule."
+                      }
                     }
-                  },
-                  "description": "Per-rule metadata (does not affect matching)."
+                  }
                 },
                 "notICMP": {
+                  "description": "NotICMP is the negated version of the ICMP field.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
@@ -2601,27 +2918,34 @@ export const generatedSchemas = {
                   "description": "Protocol name or IP protocol number."
                 },
                 "source": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -2632,13 +2956,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -2649,36 +2976,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -2690,15 +3025,17 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 }
               }
             }
           },
           "ingress": {
+            "description": "The ordered set of ingress rules.  Each rule contains a set of packet match criteria and\na corresponding action to apply. Limited to 1024 rules per policy.",
+            "maxItems": 1024,
             "type": "array",
             "items": {
+              "description": "A Rule encapsulates a set of match criteria and an action.  Both selector-based security Policy\nand security Profiles reference rules - separated out as a list of rules for both\ningress and egress packet matching.\n\nEach positive match criteria has a negated version, prefixed with \"Not\". All the match\ncriteria within a rule must be satisfied for a packet to match. A single rule can contain\nthe positive and negative version of a match and both must be satisfied for the rule to match.",
               "required": [
                 "action"
               ],
@@ -2716,27 +3053,34 @@ export const generatedSchemas = {
                   "description": "What to do with matching traffic."
                 },
                 "destination": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -2747,13 +3091,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -2764,36 +3111,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -2805,14 +3160,15 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 },
                 "http": {
+                  "description": "HTTP match clause (ingress only).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "methods": {
+                      "description": "Methods is an optional field that restricts the rule to apply only to HTTP requests that use one of the listed\nHTTP Methods (e.g. GET, PUT, etc.)\nMultiple methods are OR'd together.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
@@ -2820,9 +3176,11 @@ export const generatedSchemas = {
                       }
                     },
                     "paths": {
+                      "description": "Paths is an optional field that restricts the rule to apply to HTTP requests that use one of the listed\nHTTP Paths.\nMultiple paths are OR'd together.\ne.g:\n- exact: /foo\n- prefix: /bar\nNOTE: Each entry may ONLY specify either a `exact` or a `prefix` match. The validator will check for it.",
                       "maxItems": 20,
                       "type": "array",
                       "items": {
+                        "description": "HTTPPath specifies an HTTP path to match. It may be either of the form:\nexact: <path>: which matches the path exactly or\nprefix: <path-prefix>: which matches the path prefix",
                         "type": "object",
                         "additionalProperties": false,
                         "properties": {
@@ -2837,58 +3195,62 @@ export const generatedSchemas = {
                         }
                       }
                     }
-                  },
-                  "description": "HTTP match clause (ingress only)."
+                  }
                 },
                 "icmp": {
+                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
                     }
-                  },
-                  "description": "Match specific ICMP type/code (requires protocol ICMP or ICMPv6)."
+                  }
                 },
                 "ipVersion": {
+                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only.",
                   "enum": [
                     4,
                     6
                   ],
-                  "type": "integer",
-                  "description": "Restrict the rule to IPv4 (4) or IPv6 (6) traffic only."
+                  "type": "integer"
                 },
                 "metadata": {
+                  "description": "Per-rule metadata (does not affect matching).",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "annotations": {
+                      "description": "Free-form annotations attached to this rule.",
                       "type": "object",
                       "additionalProperties": {
                         "type": "string"
-                      },
-                      "description": "Free-form annotations attached to this rule."
+                      }
                     }
-                  },
-                  "description": "Per-rule metadata (does not affect matching)."
+                  }
                 },
                 "notICMP": {
+                  "description": "NotICMP is the negated version of the ICMP field.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "code": {
+                      "description": "Match on a specific ICMP code.  If specified, the Type value must also be specified.\nThis is a technical limitation imposed by the kernel's iptables firewall, which\nCalico uses to enforce the rule.",
                       "maximum": 255,
                       "minimum": 0,
                       "type": "integer"
                     },
                     "type": {
+                      "description": "Match on a specific ICMP type.  For example a value of 8 refers to ICMP Echo Request\n(i.e. pings).",
                       "maximum": 254,
                       "minimum": 0,
                       "type": "integer"
@@ -2936,27 +3298,34 @@ export const generatedSchemas = {
                   "description": "Protocol name or IP protocol number."
                 },
                 "source": {
+                  "description": "Match criteria for the source or destination of traffic.",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "namespaceSelector": {
-                      "type": "string",
-                      "description": "Selector over namespace labels."
+                      "description": "Selector over namespace labels.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "nets": {
+                      "description": "CIDRs to match.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
-                      },
-                      "description": "CIDRs to match."
+                      }
                     },
                     "notNets": {
+                      "description": "NotNets is the negated version of the Nets field.",
+                      "maxItems": 256,
                       "type": "array",
                       "items": {
                         "type": "string"
                       }
                     },
                     "notPorts": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -2967,13 +3336,16 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "notSelector": {
+                      "description": "NotSelector is the negated version of the Selector field.  See Selector field for\nsubtleties with negated selectors.",
+                      "maxLength": 1024,
                       "type": "string"
                     },
                     "ports": {
+                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports.",
+                      "maxItems": 50,
                       "type": "array",
                       "items": {
                         "anyOf": [
@@ -2984,36 +3356,44 @@ export const generatedSchemas = {
                             "type": "string"
                           }
                         ]
-                      },
-                      "description": "Ports: numbers, ranges (\"8080:8090\"), or named ports."
+                      }
                     },
                     "selector": {
-                      "type": "string",
-                      "description": "Calico selector, e.g. app == 'frontend'."
+                      "description": "Calico selector, e.g. app == 'frontend'.",
+                      "maxLength": 1024,
+                      "type": "string"
                     },
                     "serviceAccounts": {
+                      "description": "ServiceAccounts is an optional field that restricts the rule to only apply to traffic that originates from (or\nterminates at) a pod running as a matching service account.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "names": {
+                          "description": "Names is an optional field that restricts the rule to only apply to traffic that originates from (or terminates\nat) a pod running as a service account whose name is in the list.",
                           "type": "array",
                           "items": {
                             "type": "string"
                           }
                         },
                         "selector": {
+                          "description": "Selector is an optional field that restricts the rule to only apply to traffic that originates from\n(or terminates at) a pod running as a service account that matches the given label selector.\nIf both Names and Selector are specified then they are AND'ed.",
                           "type": "string"
                         }
                       }
                     },
                     "services": {
+                      "description": "Services is an optional field that contains options for matching Kubernetes Services.\nIf specified, only traffic that originates from or terminates at endpoints within the selected\nservice(s) will be matched, and only to/from each endpoint's port.\n\nServices cannot be specified on the same rule as Selector, NotSelector, NamespaceSelector, Nets,\nNotNets or ServiceAccounts.\n\nPorts and NotPorts can only be specified with Services on ingress rules.",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "name": {
+                          "description": "Name specifies the name of a Kubernetes Service to match.",
+                          "maxLength": 253,
                           "type": "string"
                         },
                         "namespace": {
+                          "description": "Namespace specifies the namespace of the given Service. If left empty, the rule\nwill match within this policy's namespace.",
+                          "maxLength": 253,
                           "type": "string"
                         }
                       }
@@ -3025,65 +3405,71 @@ export const generatedSchemas = {
                       },
                       "description": "FQDNs/wildcards (egress destination only)."
                     }
-                  },
-                  "description": "Match criteria for the source or destination of traffic."
+                  }
                 }
               }
             }
           },
           "namespaceSelector": {
-            "type": "string",
-            "description": "Restrict which namespaces this applies to."
+            "description": "Restrict which namespaces this applies to.",
+            "maxLength": 1024,
+            "type": "string"
           },
           "order": {
-            "type": "number",
-            "description": "Lower order = higher precedence."
+            "description": "Lower order = higher precedence.",
+            "type": "number"
           },
           "performanceHints": {
+            "description": "Opt-in performance tweaks. AssumeNeededOnEveryNode programs the policy on every node even if no local endpoint matches yet.",
             "type": "array",
             "items": {
               "enum": [
                 "AssumeNeededOnEveryNode"
               ],
               "type": "string"
-            },
-            "description": "Opt-in performance tweaks. AssumeNeededOnEveryNode programs the policy on every node even if no local endpoint matches yet."
+            }
           },
           "preDNAT": {
+            "description": "PreDNAT indicates to apply the rules in this policy before any DNAT.",
             "type": "boolean"
           },
           "selector": {
-            "type": "string",
-            "description": "Endpoints this policy applies to, e.g. all() or app == 'db'."
+            "description": "Endpoints this policy applies to, e.g. all() or app == 'db'.",
+            "maxLength": 1024,
+            "type": "string"
           },
           "serviceAccountSelector": {
+            "description": "ServiceAccountSelector is an optional field for an expression used to select a pod based on service accounts.",
+            "maxLength": 1024,
             "type": "string"
           },
           "stagedAction": {
             "default": "Set",
+            "description": "Set (preview this policy) or Delete (preview removing it). Defaults to Set.",
             "enum": [
               "Set",
               "Delete"
             ],
-            "type": "string",
-            "description": "Set (preview this policy) or Delete (preview removing it). Defaults to Set."
+            "type": "string"
           },
           "tier": {
             "default": "default",
+            "description": "The name of the tier that this policy belongs to.  If this is omitted, the default\ntier (name is \"default\") is assumed.  The specified tier must exist in order to create\nsecurity policies within the tier, the \"default\" tier is created automatically if it\ndoes not exist, this means for deployments requiring only a single Tier, the tier name\nmay be omitted on all policy management requests.",
             "type": "string"
           },
           "types": {
+            "description": "Directions governed. Inferred from ingress/egress if omitted.",
             "maxItems": 2,
             "minItems": 1,
             "type": "array",
             "items": {
+              "description": "PolicyType enumerates the possible values of the PolicySpec Types field.",
               "enum": [
                 "Ingress",
                 "Egress"
               ],
               "type": "string"
-            },
-            "description": "Directions governed. Inferred from ingress/egress if omitted."
+            }
           }
         }
       }
@@ -3140,21 +3526,25 @@ export const generatedSchemas = {
         "additionalProperties": false,
         "properties": {
           "egress": {
+            "description": "List of egress rules to be applied to the selected pods. Outgoing traffic is\nallowed if there are no NetworkPolicies selecting the pod (and cluster policy\notherwise allows the traffic), OR if the traffic matches at least one egress rule\nacross all of the NetworkPolicy objects whose podSelector matches the pod. If\nthis field is empty then this NetworkPolicy limits all outgoing traffic (and serves\nsolely to ensure that the pods it selects are isolated by default).\nThis field is beta-level in 1.8",
             "type": "array",
             "items": {
+              "description": "NetworkPolicyEgressRule describes a particular set of traffic that is allowed out of pods\nmatched by a NetworkPolicySpec's podSelector. The traffic must match both ports and to.\nThis type is beta-level in 1.8",
               "type": "object",
               "additionalProperties": false,
               "properties": {
                 "ports": {
+                  "description": "ports is a list of destination ports for outgoing traffic.\nEach item in this list is combined using a logical OR. If this field is\nempty or missing, this rule matches all ports (traffic not restricted by port).\nIf this field is present and contains at least one item, then this rule allows\ntraffic only if the traffic matches at least one port in the list.",
                   "type": "array",
                   "items": {
+                    "description": "NetworkPolicyPort describes a port to allow traffic on",
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
                       "endPort": {
+                        "description": "End of a port range (with port as start).",
                         "format": "int32",
-                        "type": "integer",
-                        "description": "End of a port range (with port as start)."
+                        "type": "integer"
                       },
                       "port": {
                         "anyOf": [
@@ -3168,8 +3558,8 @@ export const generatedSchemas = {
                         "description": "Numeric port or named port from the pod spec."
                       },
                       "protocol": {
-                        "type": "string",
                         "description": "Defaults to TCP.",
+                        "type": "string",
                         "enum": [
                           "TCP",
                           "UDP",
@@ -3180,12 +3570,15 @@ export const generatedSchemas = {
                   }
                 },
                 "to": {
+                  "description": "to is a list of destinations for outgoing traffic of pods selected for this rule.\nItems in this list are combined using a logical OR operation. If this field is\nempty or missing, this rule matches all destinations (traffic not restricted by\ndestination). If this field is present and contains at least one item, this rule\nallows traffic only if the traffic matches at least one item in the to list.",
                   "type": "array",
                   "items": {
+                    "description": "NetworkPolicyPeer describes a peer to allow traffic to/from. Only certain combinations of\nfields are allowed",
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
                       "ipBlock": {
+                        "description": "ipBlock defines policy on a particular IPBlock. If this field is set then\nneither of the other fields can be.",
                         "required": [
                           "cidr"
                         ],
@@ -3193,10 +3586,11 @@ export const generatedSchemas = {
                         "additionalProperties": false,
                         "properties": {
                           "cidr": {
-                            "type": "string",
-                            "description": "CIDR, e.g. 10.0.0.0/16."
+                            "description": "CIDR, e.g. 10.0.0.0/16.",
+                            "type": "string"
                           },
                           "except": {
+                            "description": "except is a slice of CIDRs that should not be included within an IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"\nExcept values will be rejected if they are outside the cidr range",
                             "type": "array",
                             "items": {
                               "type": "string"
@@ -3205,12 +3599,15 @@ export const generatedSchemas = {
                         }
                       },
                       "namespaceSelector": {
+                        "description": "A Kubernetes label selector. Empty selects everything in scope.",
                         "type": "object",
                         "additionalProperties": false,
                         "properties": {
                           "matchExpressions": {
+                            "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
                             "type": "array",
                             "items": {
+                              "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
                               "required": [
                                 "key",
                                 "operator"
@@ -3219,9 +3616,11 @@ export const generatedSchemas = {
                               "additionalProperties": false,
                               "properties": {
                                 "key": {
+                                  "description": "key is the label key that the selector applies to.",
                                   "type": "string"
                                 },
                                 "operator": {
+                                  "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
                                   "type": "string",
                                   "enum": [
                                     "In",
@@ -3231,6 +3630,7 @@ export const generatedSchemas = {
                                   ]
                                 },
                                 "values": {
+                                  "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
                                   "type": "array",
                                   "items": {
                                     "type": "string"
@@ -3240,23 +3640,25 @@ export const generatedSchemas = {
                             }
                           },
                           "matchLabels": {
+                            "description": "Map of {key: value}; all must match (AND).",
                             "type": "object",
                             "additionalProperties": {
                               "type": "string"
-                            },
-                            "description": "Map of {key: value}; all must match (AND)."
+                            }
                           }
                         },
-                        "title": "Label selector",
-                        "description": "A Kubernetes label selector. Empty selects everything in scope."
+                        "title": "Label selector"
                       },
                       "podSelector": {
+                        "description": "A Kubernetes label selector. Empty selects everything in scope.",
                         "type": "object",
                         "additionalProperties": false,
                         "properties": {
                           "matchExpressions": {
+                            "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
                             "type": "array",
                             "items": {
+                              "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
                               "required": [
                                 "key",
                                 "operator"
@@ -3265,9 +3667,11 @@ export const generatedSchemas = {
                               "additionalProperties": false,
                               "properties": {
                                 "key": {
+                                  "description": "key is the label key that the selector applies to.",
                                   "type": "string"
                                 },
                                 "operator": {
+                                  "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
                                   "type": "string",
                                   "enum": [
                                     "In",
@@ -3277,6 +3681,7 @@ export const generatedSchemas = {
                                   ]
                                 },
                                 "values": {
+                                  "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
                                   "type": "array",
                                   "items": {
                                     "type": "string"
@@ -3286,15 +3691,14 @@ export const generatedSchemas = {
                             }
                           },
                           "matchLabels": {
+                            "description": "Map of {key: value}; all must match (AND).",
                             "type": "object",
                             "additionalProperties": {
                               "type": "string"
-                            },
-                            "description": "Map of {key: value}; all must match (AND)."
+                            }
                           }
                         },
-                        "title": "Label selector",
-                        "description": "A Kubernetes label selector. Empty selects everything in scope."
+                        "title": "Label selector"
                       }
                     }
                   }
@@ -3303,18 +3707,23 @@ export const generatedSchemas = {
             }
           },
           "ingress": {
+            "description": "List of ingress rules to be applied to the selected pods. Traffic is allowed to\na pod if there are no NetworkPolicies selecting the pod\n(and cluster policy otherwise allows the traffic), OR if the traffic source is\nthe pod's local node, OR if the traffic matches at least one ingress rule\nacross all of the NetworkPolicy objects whose podSelector matches the pod. If\nthis field is empty then this NetworkPolicy does not allow any traffic (and serves\nsolely to ensure that the pods it selects are isolated by default)",
             "type": "array",
             "items": {
+              "description": "NetworkPolicyIngressRule describes a particular set of traffic that is allowed to the pods\nmatched by a NetworkPolicySpec's podSelector. The traffic must match both ports and from.",
               "type": "object",
               "additionalProperties": false,
               "properties": {
                 "from": {
+                  "description": "from is a list of sources which should be able to access the pods selected for this rule.\nItems in this list are combined using a logical OR operation. If this field is\nempty or missing, this rule matches all sources (traffic not restricted by\nsource). If this field is present and contains at least one item, this rule\nallows traffic only if the traffic matches at least one item in the from list.",
                   "type": "array",
                   "items": {
+                    "description": "NetworkPolicyPeer describes a peer to allow traffic to/from. Only certain combinations of\nfields are allowed",
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
                       "ipBlock": {
+                        "description": "ipBlock defines policy on a particular IPBlock. If this field is set then\nneither of the other fields can be.",
                         "required": [
                           "cidr"
                         ],
@@ -3322,10 +3731,11 @@ export const generatedSchemas = {
                         "additionalProperties": false,
                         "properties": {
                           "cidr": {
-                            "type": "string",
-                            "description": "CIDR, e.g. 10.0.0.0/16."
+                            "description": "CIDR, e.g. 10.0.0.0/16.",
+                            "type": "string"
                           },
                           "except": {
+                            "description": "except is a slice of CIDRs that should not be included within an IPBlock\nValid examples are \"192.168.1.0/24\" or \"2001:db8::/64\"\nExcept values will be rejected if they are outside the cidr range",
                             "type": "array",
                             "items": {
                               "type": "string"
@@ -3334,12 +3744,15 @@ export const generatedSchemas = {
                         }
                       },
                       "namespaceSelector": {
+                        "description": "A Kubernetes label selector. Empty selects everything in scope.",
                         "type": "object",
                         "additionalProperties": false,
                         "properties": {
                           "matchExpressions": {
+                            "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
                             "type": "array",
                             "items": {
+                              "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
                               "required": [
                                 "key",
                                 "operator"
@@ -3348,9 +3761,11 @@ export const generatedSchemas = {
                               "additionalProperties": false,
                               "properties": {
                                 "key": {
+                                  "description": "key is the label key that the selector applies to.",
                                   "type": "string"
                                 },
                                 "operator": {
+                                  "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
                                   "type": "string",
                                   "enum": [
                                     "In",
@@ -3360,6 +3775,7 @@ export const generatedSchemas = {
                                   ]
                                 },
                                 "values": {
+                                  "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
                                   "type": "array",
                                   "items": {
                                     "type": "string"
@@ -3369,23 +3785,25 @@ export const generatedSchemas = {
                             }
                           },
                           "matchLabels": {
+                            "description": "Map of {key: value}; all must match (AND).",
                             "type": "object",
                             "additionalProperties": {
                               "type": "string"
-                            },
-                            "description": "Map of {key: value}; all must match (AND)."
+                            }
                           }
                         },
-                        "title": "Label selector",
-                        "description": "A Kubernetes label selector. Empty selects everything in scope."
+                        "title": "Label selector"
                       },
                       "podSelector": {
+                        "description": "A Kubernetes label selector. Empty selects everything in scope.",
                         "type": "object",
                         "additionalProperties": false,
                         "properties": {
                           "matchExpressions": {
+                            "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
                             "type": "array",
                             "items": {
+                              "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
                               "required": [
                                 "key",
                                 "operator"
@@ -3394,9 +3812,11 @@ export const generatedSchemas = {
                               "additionalProperties": false,
                               "properties": {
                                 "key": {
+                                  "description": "key is the label key that the selector applies to.",
                                   "type": "string"
                                 },
                                 "operator": {
+                                  "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
                                   "type": "string",
                                   "enum": [
                                     "In",
@@ -3406,6 +3826,7 @@ export const generatedSchemas = {
                                   ]
                                 },
                                 "values": {
+                                  "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
                                   "type": "array",
                                   "items": {
                                     "type": "string"
@@ -3415,29 +3836,30 @@ export const generatedSchemas = {
                             }
                           },
                           "matchLabels": {
+                            "description": "Map of {key: value}; all must match (AND).",
                             "type": "object",
                             "additionalProperties": {
                               "type": "string"
-                            },
-                            "description": "Map of {key: value}; all must match (AND)."
+                            }
                           }
                         },
-                        "title": "Label selector",
-                        "description": "A Kubernetes label selector. Empty selects everything in scope."
+                        "title": "Label selector"
                       }
                     }
                   }
                 },
                 "ports": {
+                  "description": "ports is a list of ports which should be made accessible on the pods selected for\nthis rule. Each item in this list is combined using a logical OR. If this field is\nempty or missing, this rule matches all ports (traffic not restricted by port).\nIf this field is present and contains at least one item, then this rule allows\ntraffic only if the traffic matches at least one port in the list.",
                   "type": "array",
                   "items": {
+                    "description": "NetworkPolicyPort describes a port to allow traffic on",
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
                       "endPort": {
+                        "description": "End of a port range (with port as start).",
                         "format": "int32",
-                        "type": "integer",
-                        "description": "End of a port range (with port as start)."
+                        "type": "integer"
                       },
                       "port": {
                         "anyOf": [
@@ -3451,8 +3873,8 @@ export const generatedSchemas = {
                         "description": "Numeric port or named port from the pod spec."
                       },
                       "protocol": {
-                        "type": "string",
                         "description": "Defaults to TCP.",
+                        "type": "string",
                         "enum": [
                           "TCP",
                           "UDP",
@@ -3466,12 +3888,15 @@ export const generatedSchemas = {
             }
           },
           "podSelector": {
+            "description": "Pods this policy applies to. Empty {} selects all pods in the namespace.",
             "type": "object",
             "additionalProperties": false,
             "properties": {
               "matchExpressions": {
+                "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
                 "type": "array",
                 "items": {
+                  "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
                   "required": [
                     "key",
                     "operator"
@@ -3480,9 +3905,11 @@ export const generatedSchemas = {
                   "additionalProperties": false,
                   "properties": {
                     "key": {
+                      "description": "key is the label key that the selector applies to.",
                       "type": "string"
                     },
                     "operator": {
+                      "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
                       "type": "string",
                       "enum": [
                         "In",
@@ -3492,6 +3919,7 @@ export const generatedSchemas = {
                       ]
                     },
                     "values": {
+                      "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
                       "type": "array",
                       "items": {
                         "type": "string"
@@ -3501,33 +3929,33 @@ export const generatedSchemas = {
                 }
               },
               "matchLabels": {
+                "description": "Map of {key: value}; all must match (AND).",
                 "type": "object",
                 "additionalProperties": {
                   "type": "string"
-                },
-                "description": "Map of {key: value}; all must match (AND)."
+                }
               }
             },
-            "title": "Label selector",
-            "description": "Pods this policy applies to. Empty {} selects all pods in the namespace."
+            "title": "Label selector"
           },
           "policyTypes": {
+            "description": "Which directions this policy governs. Inferred if omitted.",
             "maxItems": 2,
             "minItems": 1,
             "type": "array",
             "items": {
+              "description": "PolicyType string describes the NetworkPolicy type\nThis type is beta-level in 1.8",
               "type": "string"
-            },
-            "description": "Which directions this policy governs. Inferred if omitted."
+            }
           },
           "stagedAction": {
             "default": "Set",
+            "description": "Set (preview this policy) or Delete (preview removing it). Defaults to Set.",
             "enum": [
               "Set",
               "Delete"
             ],
-            "type": "string",
-            "description": "Set (preview this policy) or Delete (preview removing it). Defaults to Set."
+            "type": "string"
           }
         }
       }
@@ -3576,21 +4004,22 @@ export const generatedSchemas = {
         }
       },
       "spec": {
+        "description": "TierSpec contains the specification for a security policy tier resource.",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "defaultAction": {
             "default": "Deny",
-            "type": "string",
             "description": "Action for traffic not matched by any policy in this tier (default: Deny).",
+            "type": "string",
             "enum": [
               "Deny",
               "Pass"
             ]
           },
           "order": {
-            "type": "number",
-            "description": "Tier precedence; lower = higher precedence."
+            "description": "Tier precedence; lower = higher precedence.",
+            "type": "number"
           }
         }
       }
@@ -3639,27 +4068,29 @@ export const generatedSchemas = {
         }
       },
       "spec": {
+        "description": "HostEndpointSpec contains the specification for a HostEndpoint resource.",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "expectedIPs": {
+            "description": "IPs expected on this interface; used to match traffic.",
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "description": "IPs expected on this interface; used to match traffic."
+            }
           },
           "interfaceName": {
+            "description": "Host interface name (e.g. eth0), or '*' for all interfaces.",
             "maxLength": 15,
-            "type": "string",
-            "description": "Host interface name (e.g. eth0), or '*' for all interfaces."
+            "type": "string"
           },
           "node": {
+            "description": "Name of the node this host endpoint is on.",
             "maxLength": 253,
-            "type": "string",
-            "description": "Name of the node this host endpoint is on."
+            "type": "string"
           },
           "ports": {
+            "description": "Named ports exposed on this endpoint.",
             "type": "array",
             "items": {
               "required": [
@@ -3694,15 +4125,14 @@ export const generatedSchemas = {
                   ]
                 }
               }
-            },
-            "description": "Named ports exposed on this endpoint."
+            }
           },
           "profiles": {
+            "description": "Profiles applied to this endpoint.",
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "description": "Profiles applied to this endpoint."
+            }
           }
         }
       }
