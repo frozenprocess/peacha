@@ -7,11 +7,11 @@ metadata:
     app.kubernetes.io/name: peacha
 spec:
   parentRefs:
-    - name: <YOUR-GATEWAY-NAME>
-      namespace: <YOUR-GATEWAY-NAMESPACE>
+    - name: postiz-gateway
+      namespace: ice-stuff
       sectionName: http
   hostnames:
-    - <YOUR-HOSTNAME>
+    - peacha.frozenspace.eu
   rules:
     - backendRefs:
         - name: peacha-editor

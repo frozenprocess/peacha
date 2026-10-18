@@ -11,6 +11,9 @@ spec:
   # ReadWriteOnce PVC (single writer). PostgreSQL mode: set RESULTS_FILE and
   # SHARE_FILE to postgres:// DSNs, remove the volumeMount + volume, and scale
   # freely - the only other constraint is SESSION_SECRET (see below).
+  # Stop the old SQLite writer before starting its replacement.
+  strategy:
+    type: Recreate
   replicas: 1
   selector:
     matchLabels:
@@ -37,8 +40,8 @@ spec:
           type: RuntimeDefault
       containers:
         - name: editor
-          image: ghcr.io/frozenprocess/peacha-editor:dev
-          imagePullPolicy: Always
+          image: ghcr.io/frozenprocess/peacha-editor:release-required
+          imagePullPolicy: IfNotPresent
           args: ["--addr", ":8080"]
           ports:
             - name: http
