@@ -19,9 +19,21 @@ bin/
 # The SPA embed dir is rebuilt by the web stage and copied back in, so the
 # host copy is noise. (The baseline snapshots, tutorials, and exams embed dirs
 # are NOT ignored - they must reach the build context for the //go:embed to
-# resolve. exams is mirrored from exams/ by `make exams-sync` before build.)
+# resolve. private exams are included only with INCLUDE_EXAMS=true.)
 server/dist
 
 # Editor / OS cruft.
 *.log
 .DS_Store
+
+# Local credentials and runtime state must not enter the build context.
+.env*
+.aws
+.codex
+.agents
+**/*.db
+**/*.db-shm
+**/*.db-wal
+k8s-db
+deploy/k8s/secret.yaml
+third_party/exams

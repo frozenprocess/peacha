@@ -11,7 +11,7 @@ COPY web/ ./
 # gen:crd (part of `npm run build`) reads the Calico CRD manifest at repo-root
 # third_party/; bring just that file into the web stage.
 COPY third_party/calico/manifests/v3_projectcalico_org.yaml /src/third_party/calico/manifests/v3_projectcalico_org.yaml
-RUN npm run build
+RUN npm run check:crd && npm run build
 # -> /src/server/dist (index.html + assets)
 
 # ---- Stage 2: build the static Go binary -------------------------------------
@@ -29,6 +29,8 @@ WORKDIR /src
 ARG EDITOR_VERSION=unknown
 ARG ENGINE_VERSION=unknown
 ARG CALICO_VERSION=unknown
+# Public releases always exclude locally cached private exam content.
+ARG INCLUDE_EXAMS=false
 
 # Module metadata first (better layer caching). The editor is a single module
 # with all third-party replaces inlined in go.mod, so every checksum lives in
@@ -38,19 +40,21 @@ COPY third_party/ ./third_party/
 COPY cmd/ ./cmd/
 COPY server/ ./server/
 
-# Embedded assets: the freshly built SPA lands in server/dist/ below. The other
-# embed source dirs — server/baseline/ (committed snapshots), server/tutorials/
-# (committed read-along tutorials), and server/exams/ (mirrored from exams/ by
-# `make exams-sync`, which the image/publish targets run first) — already arrive
-# with the `COPY server/` above. All must exist before `go build` so the
-# //go:embed directives in server/{static,baseline,tutorials,exams}.go resolve.
+# Exams are opt-in: run make exams-sync explicitly before a private build.
+RUN case "$INCLUDE_EXAMS" in \
+      false) find server/exams -mindepth 1 -maxdepth 1 ! -name README.md -exec rm -rf {} + ;; \
+      true) test -n "$(find server/exams -mindepth 1 -type d -print -quit)" ;; \
+      *) echo "INCLUDE_EXAMS must be true or false" >&2; exit 1 ;; \
+    esac
+
+# Embed the freshly built SPA alongside committed baseline and tutorial data.
 COPY --from=web /src/server/dist/ ./server/dist/
 
 # -trimpath strips local filesystem paths from the binary; -s -w drops the
 # symbol + DWARF tables. Smaller binary, and no source paths leak into it.
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    go build -trimpath \
+    REQUIRE_EXAMS="$INCLUDE_EXAMS" go test ./... && go build -trimpath \
       -ldflags="-s -w -X main.editorVersion=${EDITOR_VERSION} -X main.engineVersion=${ENGINE_VERSION} -X main.calicoVersion=${CALICO_VERSION}" \
       -o /out/peacha ./cmd/editor
 

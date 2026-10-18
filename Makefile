@@ -45,9 +45,12 @@ SUBMODULE_MARKER := third_party/calico/go.mod
 
 # Image coordinates for `make publish` (and `make image`). Override on the CLI:
 #   make publish IMAGE=ghcr.io/acme/peacha-editor TAG=v1.2.3
-IMAGE ?= peacha-editor
+IMAGE ?= ghcr.io/frozenprocess/peacha-editor
 TAG   ?= $(shell git -C $(REPO_ROOT) rev-parse --short HEAD 2>/dev/null || echo latest)
-IMAGE_REPO  ?= ghcr.io/frozenprocess/
+
+# Docker images exclude private exams unless explicitly requested.
+INCLUDE_EXAMS ?= false
+
 # Local OAuth credentials file sourced by `make dev-auth` (gitignored). Override
 # the path on the CLI: make dev-auth AUTH_ENV=deploy/my-auth.env
 AUTH_ENV ?= .env.auth
@@ -60,7 +63,7 @@ PULL_DIR ?= ./k8s-db
 # third_party/exams (gitignored, like the rest of third_party/) at build time.
 # No access / repo absent -> build with 0 exams and server/exams/README.md
 # explains how to author them. Override to point at a fork:
-#   make build EXAMS_REPO=git@github.com:you/your-exams.git
+#   make exams-sync EXAMS_REPO=git@github.com:you/your-exams.git
 EXAMS_REPO ?= git@github.com:frozenprocess/peacha-networkpolicy-exams.git
 EXAMS_DIR  := $(REPO_ROOT)/third_party/exams
 
@@ -92,8 +95,6 @@ ENGINE_VERSION ?= $(shell git -C $(REPO_ROOT)/third_party/telepathy describe --t
 CALICO_VERSION ?= $(shell git -C $(REPO_ROOT)/third_party/calico describe --tags --always --dirty 2>/dev/null || echo $(CALICO_BRANCH))
 VERSION_LDFLAGS := -X main.editorVersion=$(EDITOR_VERSION) -X main.engineVersion=$(ENGINE_VERSION) -X main.calicoVersion=$(CALICO_VERSION)
 
-IMAGE ?= ghcr.io/frozenprocess/peacha-editor
-TAG   ?= latest
 
 
 .PHONY: help submodules dev dev-auth build build-go build-web exams-sync crd-sync test image publish pull-db pull-links-db clean distclean
@@ -215,26 +216,28 @@ crd-sync: $(SUBMODULE_MARKER)
 test: $(SUBMODULE_MARKER)
 	$(GO) test $(MODULE)/...
 
-image:
+image: $(SUBMODULE_MARKER)
 	docker build -f deploy/Dockerfile \
 	  --build-arg EDITOR_VERSION=$(EDITOR_VERSION) \
 	  --build-arg ENGINE_VERSION=$(ENGINE_VERSION) \
 	  --build-arg CALICO_VERSION=$(CALICO_VERSION) \
-	  -t peacha-editor:dev .
+	  --build-arg INCLUDE_EXAMS=$(INCLUDE_EXAMS) \
+	  -t $(IMAGE):dev .
 
 # Build the deployable image and tag it locally. The Dockerfile is multi-stage:
 # the SPA + Go binary are built in throwaway stages and the final stage is
 # `scratch` holding only the static binary - no source tree, toolchain, or keys
-# ever land in the published image (.dockerignore allowlists just the workspace
-# pieces the build needs). Build + tag only; push when ready:
+# land in the final image. Private exam data is opt-in.
+# Build + tag only; push when ready:
 #   docker push $(IMAGE):$(TAG)
-publish:
+publish: $(SUBMODULE_MARKER)
 	docker build -f deploy/Dockerfile \
 	  --build-arg EDITOR_VERSION=$(EDITOR_VERSION) \
 	  --build-arg ENGINE_VERSION=$(ENGINE_VERSION) \
 	  --build-arg CALICO_VERSION=$(CALICO_VERSION) \
-	  -t $(IMAGE):$(TAG) -t $(IMAGE_REPO)$(IMAGE):latest .
-	@echo "tagged $(IMAGE):$(TAG) + $(IMAGE_REPO)$(IMAGE):latest (scratch). push with: docker push $(IMAGE):$(TAG)"
+	  --build-arg INCLUDE_EXAMS=$(INCLUDE_EXAMS) \
+	  -t $(IMAGE):$(TAG) .
+	@echo "tagged $(IMAGE):$(TAG) (scratch). push with: docker push $(IMAGE):$(TAG)"
 
 # Download the SQLite stores (+ their WAL sidecars) from the running k8s
 # deployment: pull-db grabs every *.db on the PVC, pull-links-db just the
