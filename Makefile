@@ -212,7 +212,7 @@ crd-sync: $(SUBMODULE_MARKER)
 	@command -v node >/dev/null || (echo "node not installed - see README" && exit 1)
 	cd web && npm run --silent crd-sync
 
-test: $(SUBMODULE_MARKER) exams-sync
+test: $(SUBMODULE_MARKER)
 	$(GO) test $(MODULE)/...
 
 image:

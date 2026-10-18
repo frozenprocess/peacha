@@ -597,15 +597,18 @@ spec:
 ## Testing your exam
 
 ```sh
-make test        # runs exams-sync, then go test
+make exams-sync # explicitly refresh private exam content
+REQUIRE_EXAMS=true make test
 ```
 
 `TestExamSolutionsPass` (`server/solution_test.go`) grades every exam's
 `solution.yaml` against the default provider (`kind`). It fails if any exam
 has no solution or the solution doesn't pass. To try an exam without the
 private repo, put its folder directly in `server/exams/` and run
-`go test ./server -run TestExamSolutionsPass`. Don't run `make test` for that,
-because `exams-sync` replaces the folder.
+`REQUIRE_EXAMS=true go test ./server -run TestExamSolutionsPass`.
+`make test` uses the existing exam content without fetching or replacing it.
+Without `REQUIRE_EXAMS=true`, the solution test skips when no private exams
+are present, allowing public builds to validate the rest of the application.
 
 Also check that:
 
