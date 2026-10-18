@@ -56,6 +56,11 @@ Other useful targets, run `make` (or `make help`) for the full list:
 - `make dev-auth`, like `make dev`, with OAuth login enabled (copy `.env.auth.example` to `.env.auth` first)
 - `make image` / `make publish`, build the Docker image (see `deploy/`)
 
+## Releases
+
+See [release workflow and local publishing](docs/releases.md) and
+[digest-pinned Kubernetes deployment](deploy/k8s/README.md).
+
 ## License
 
 See [LICENSE](LICENSE).
