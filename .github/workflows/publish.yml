@@ -1,54 +1,111 @@
-name: Publish editor image
-
-# Builds the multi-stage scratch image (deploy/Dockerfile) and pushes it to
-# GitHub Container Registry as ghcr.io/<owner>/peacha-editor:dev.
-#
-# Packages first published from a private repo are created PRIVATE by default;
-# verify under the repo's Packages > peacha-editor > Package settings.
+name: Validate and publish editor image
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
+    tags: ['v*']
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 env:
   IMAGE: ghcr.io/${{ github.repository_owner }}/peacha-editor
-  TAG: dev
 
 jobs:
-  publish:
+  validate:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
-      - name: Checkout (with submodules)
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
-          # The telepathy submodule uses an HTTPS URL. actions/checkout
-          # authenticates with this token. The default GITHUB_TOKEN is scoped to
-          # THIS repo only - if telepathy is a
-          # separate private repo, supply a PAT (repo scope) as a secret here:
-          #   token: ${{ secrets.SUBMODULES_PAT }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push
+      - name: Test release tag policy
+        run: python3 scripts/test-release-tags.py
+      - uses: docker/setup-buildx-action@v3
+      - name: Build and test
         uses: docker/build-push-action@v6
         with:
           context: .
           file: deploy/Dockerfile
-          push: true
-          tags: ${{ env.IMAGE }}:${{ env.TAG }}
+          load: true
+          tags: peacha-editor:check
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Smoke test runtime image
+        run: bash scripts/smoke-image.sh peacha-editor:check
+
+  publish:
+    needs: validate
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    # All refs share one publisher; stale main runs cannot promote :dev.
+    concurrency:
+      group: peacha-image-publisher
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Compute versions and publication tags
+        id: release
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/main:refs/remotes/origin/main' --tags
+          git -C third_party/telepathy fetch --tags
+          editor_version=$(git describe --tags --always)
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            editor_version=${GITHUB_REF#refs/tags/}
+          fi
+          {
+            echo "EDITOR_VERSION=$editor_version"
+            echo "ENGINE_VERSION=$(git -C third_party/telepathy describe --tags --always)"
+            echo "CALICO_VERSION=$(git -C third_party/calico rev-parse HEAD)"
+          } >> "$GITHUB_ENV"
+          image=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
+          tags=$(IMAGE="$image" bash scripts/release-tags.sh)
+          {
+            echo 'tags<<EOF'
+            echo "$tags"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build release image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Dockerfile
+          load: true
+          tags: ${{ steps.release.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          build-args: |
+            EDITOR_VERSION=${{ env.EDITOR_VERSION }}
+            ENGINE_VERSION=${{ env.ENGINE_VERSION }}
+            CALICO_VERSION=${{ env.CALICO_VERSION }}
+            INCLUDE_EXAMS=false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke test and push release image
+        env:
+          RELEASE_TAGS: ${{ steps.release.outputs.tags }}
+        run: |
+          set -euo pipefail
+          first_tag=$(head -n 1 <<< "$RELEASE_TAGS")
+          bash scripts/smoke-image.sh "$first_tag"
+          while IFS= read -r tag; do
+            docker push "$tag"
+          done <<< "$RELEASE_TAGS"
+          digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$first_tag")
+          echo "Published: \`$digest\`" >> "$GITHUB_STEP_SUMMARY"
