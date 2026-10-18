@@ -8,6 +8,8 @@ bin/
 *.db
 *.db-shm
 *.db-wal
+# DBs downloaded from the k8s deployment by `make pull-db` / `pull-links-db`.
+k8s-db/
 
 # Local OAuth credentials for `make dev-auth` (keep the .example committed).
 .env.auth

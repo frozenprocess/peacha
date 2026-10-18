@@ -13,6 +13,9 @@
 #   make image         docker build (deploy/Dockerfile) tagged :dev
 #   make publish       build the deployable scratch image + tag IMAGE:TAG
 #                      (no source / no keys in the image; build + tag only)
+#   make pull-db       download every SQLite db from the k8s deployment
+#   make pull-links-db download share-links.db from the k8s deployment
+#                      (into PULL_DIR=./k8s-db; uses current KUBECONFIG)
 #   make clean         drop server/dist content (keeps .placeholder) + bin
 #   make distclean     also de-init the submodules and drop go.work.sum
 
@@ -48,6 +51,9 @@ IMAGE_REPO  ?= ghcr.io/frozenprocess/
 # Local OAuth credentials file sourced by `make dev-auth` (gitignored). Override
 # the path on the CLI: make dev-auth AUTH_ENV=deploy/my-auth.env
 AUTH_ENV ?= .env.auth
+# Where `make pull-links-db` drops the db pulled from the k8s deployment. Kept
+# out of the repo root so it never clobbers the local dev share-links.db.
+PULL_DIR ?= ./k8s-db
 
 # The graded exams (answer keys included) live in a PRIVATE repo so they never
 # ship in this public checkout. `make exams-sync` pulls them into
@@ -90,7 +96,7 @@ IMAGE ?= ghcr.io/frozenprocess/peacha-editor
 TAG   ?= latest
 
 
-.PHONY: help submodules dev dev-auth build build-go build-web exams-sync crd-sync test image publish clean distclean
+.PHONY: help submodules dev dev-auth build build-go build-web exams-sync crd-sync test image publish pull-db pull-links-db clean distclean
 
 .DEFAULT_GOAL := help
 
@@ -111,6 +117,8 @@ help:
 	@echo "  make test          go test (editor module only)"
 	@echo "  make image         docker build (deploy/Dockerfile) tagged :dev"
 	@echo "  make publish       build the deployable scratch image + tag IMAGE:TAG"
+	@echo "  make pull-db       download every SQLite db from the k8s deployment into $(PULL_DIR)"
+	@echo "  make pull-links-db download share-links.db from the k8s deployment into $(PULL_DIR)"
 	@echo "  make clean         drop server/dist content (keeps .placeholder) + bin"
 	@echo "  make distclean     also de-init the submodules and drop go.work.sum"
 
@@ -227,6 +235,17 @@ publish:
 	  --build-arg CALICO_VERSION=$(CALICO_VERSION) \
 	  -t $(IMAGE):$(TAG) -t $(IMAGE_REPO)$(IMAGE):latest .
 	@echo "tagged $(IMAGE):$(TAG) + $(IMAGE_REPO)$(IMAGE):latest (scratch). push with: docker push $(IMAGE):$(TAG)"
+
+# Download the SQLite stores (+ their WAL sidecars) from the running k8s
+# deployment: pull-db grabs every *.db on the PVC, pull-links-db just the
+# short-link store. The image is scratch (no tar), so deploy/k8s/pull-db.sh mounts the
+# PVC read-only in a throwaway busybox pod instead of using `kubectl cp`.
+#   KUBECONFIG=~/.kube/config-ovh make pull-db PULL_DIR=./backup
+pull-db:
+	deploy/k8s/pull-db.sh all $(PULL_DIR)
+
+pull-links-db:
+	deploy/k8s/pull-db.sh share-links.db $(PULL_DIR)
 
 clean:
 	rm -f $(BIN)

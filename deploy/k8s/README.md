@@ -113,3 +113,16 @@ kubectl -n ice-stuff get gateway postiz-gateway          # PROGRAMMED=True
 curl -I https://peacha.frozenspace.eu/healthz            # -> 200, body "ok"
 curl -I http://peacha.frozenspace.eu/                    # -> 301 to https
 ```
+
+## Download the databases
+
+The image is `scratch` (no shell/tar), so `kubectl cp` can't read `/data`.
+`pull-db.sh` mounts the `peacha-data` PVC read-only in a throwaway busybox pod on
+the editor's node and streams the db + its `-wal`/`-shm` sidecars out:
+
+```bash
+export KUBECONFIG=~/.kube/config-ovh
+make pull-db                                    # every *.db -> ./k8s-db/
+make pull-links-db                              # share-links.db -> ./k8s-db/
+deploy/k8s/pull-db.sh exam-results.db ./backup  # any store, any dir
+```
